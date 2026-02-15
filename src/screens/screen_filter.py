@@ -31,7 +31,7 @@ class ScreenFilter(ctk.CTkFrame):
         self.app = app
 
         # Data
-        self.non_followers = list(app.state["non_followers"])  # Mutable copy
+        self.non_followers = list(app.data["non_followers"])  # Mutable copy
         self.whitelist = load_whitelist()
 
         # Track VIP switches: {username: BooleanVar}
@@ -292,7 +292,7 @@ class ScreenFilter(ctk.CTkFrame):
         save_whitelist(whitelisted)
 
         # Store in app state
-        self.app.state["whitelist"] = whitelisted
+        self.app.data["whitelist"] = whitelisted
 
         # Transition to Screen 4
         from src.screens.screen_export import ScreenExport

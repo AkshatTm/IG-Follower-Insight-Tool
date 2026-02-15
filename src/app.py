@@ -14,7 +14,7 @@ class App(ctk.CTk):
     Main application window.
     Manages screen lifecycle (create → display → destroy) and shared state.
     
-    State Dictionary Keys:
+    Data Dictionary Keys:
     ─────────────────────
     - followers_file   : str | None   — Path to followers_1.json
     - following_file   : str | None   — Path to following.json
@@ -36,8 +36,9 @@ class App(ctk.CTk):
         # Center the window on screen
         self._center_window()
 
-        # ── Shared Application State ─────────────────────────
-        self.state = {
+        # ── Shared Application Data ──────────────────────────
+        # NOTE: Named 'data' (not 'state') to avoid shadowing tkinter's state() method
+        self.data = {
             "followers_file": None,
             "following_file": None,
             "followers_set": set(),
@@ -84,9 +85,9 @@ class App(ctk.CTk):
         new_screen.pack(fill="both", expand=True)
         self._current_screen = new_screen
 
-    def reset_state(self):
-        """Clear all state for a fresh restart (used by 'Restart' button)."""
-        self.state = {
+    def reset_data(self):
+        """Clear all data for a fresh restart (used by 'Restart' button)."""
+        self.data = {
             "followers_file": None,
             "following_file": None,
             "followers_set": set(),

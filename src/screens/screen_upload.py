@@ -248,7 +248,7 @@ class ScreenUpload(ctk.CTkFrame):
         )
         if filepath:
             # Store path in shared state
-            self.app.state["followers_file"] = filepath
+            self.app.data["followers_file"] = filepath
             self._followers_loaded = True
 
             # Update status label with truncated path
@@ -266,7 +266,7 @@ class ScreenUpload(ctk.CTkFrame):
         )
         if filepath:
             # Store path in shared state
-            self.app.state["following_file"] = filepath
+            self.app.data["following_file"] = filepath
             self._following_loaded = True
 
             # Update status label with truncated path
@@ -298,16 +298,16 @@ class ScreenUpload(ctk.CTkFrame):
         try:
             # Parse both files
             followers_set = parse_instagram_json(
-                self.app.state["followers_file"]
+                self.app.data["followers_file"]
             )
             following_set = parse_instagram_json(
-                self.app.state["following_file"]
+                self.app.data["following_file"]
             )
 
             # Store in shared state
-            self.app.state["followers_set"] = followers_set
-            self.app.state["following_set"] = following_set
-            self.app.state["non_followers"] = calculate_non_followers(
+            self.app.data["followers_set"] = followers_set
+            self.app.data["following_set"] = following_set
+            self.app.data["non_followers"] = calculate_non_followers(
                 following_set, followers_set
             )
 

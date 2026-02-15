@@ -32,9 +32,9 @@ class ScreenResults(ctk.CTkFrame):
         self.app = app
 
         # Pull data from shared state
-        self.following_count = len(app.state["following_set"])
-        self.followers_count = len(app.state["followers_set"])
-        self.non_followers = app.state["non_followers"]
+        self.following_count = len(app.data["following_set"])
+        self.followers_count = len(app.data["followers_set"])
+        self.non_followers = app.data["non_followers"]
         self.non_followers_count = len(self.non_followers)
 
         self._build_ui()

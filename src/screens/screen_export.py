@@ -33,8 +33,8 @@ class ScreenExport(ctk.CTkFrame):
         self.app = app
 
         # Calculate final list (non-followers minus whitelisted)
-        non_followers = set(app.state["non_followers"])
-        whitelist = app.state.get("whitelist", set())
+        non_followers = set(app.data["non_followers"])
+        whitelist = app.data.get("whitelist", set())
         self.final_list = sorted(
             list(non_followers - whitelist), key=str.lower
         )
@@ -289,6 +289,6 @@ class ScreenExport(ctk.CTkFrame):
 
     def _on_restart(self):
         """Clear all data and return to Screen 1."""
-        self.app.reset_state()
+        self.app.reset_data()
         from src.screens.screen_upload import ScreenUpload
         self.app.switch_screen(ScreenUpload)
