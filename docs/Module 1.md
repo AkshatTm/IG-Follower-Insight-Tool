@@ -1,5 +1,5 @@
 # Role & Context
-Act as a Senior Desktop Application Developer and UI/UX Expert. We are building a modern, highly polished desktop application called "Instagram Auditor". 
+Act as a Senior Desktop Application Developer and UI/UX Expert. We are building a modern, highly polished desktop application called "Instagram Red Flags". 
 
 Your task is to write the complete, production-ready Python code for **Module 1: Data Upload & Quick Analysis**.
 
@@ -22,7 +22,7 @@ Your task is to write the complete, production-ready Python code for **Module 1:
 
 ## Screen 1: The "Education" Dashboard
 This is the landing screen. It must educate the user and collect the files.
-1.  **Main Header:** A large, bold, centered title: "Instagram Auditor".
+1.  **Main Header:** A large, bold, centered title: "Instagram Red Flags".
 2.  **Instruction Card (Center):** A visually distinct frame containing a step-by-step guide formatted clearly:
     * *Title:* "How to get your JSON files safely:"
     * *Step 1:* Go to Accounts Center -> Your Information and Permissions.
@@ -33,7 +33,7 @@ This is the landing screen. It must educate the user and collect the files.
 4.  **Upload Section:** Two distinct rows for file uploads.
     * Row 1: A label showing the current file status (default: "followers_1.json not selected"), and a button `[ Select Followers ]`.
     * Row 2: A label showing the current file status (default: "following.json not selected"), and a button `[ Select Following ]`.
-    * *Dynamic UX:* When a file is successfully loaded via `filedialog`, truncate the path so it looks clean, turn the label text Green, and append a checkmark (✓).
+    * *Dynamic UX:* When a file is successfully loaded via `filedialog`, truncate the path so it looks clean, turn the label text Green, and append a checkmark.
 5.  **Proceed Button:** A large, centered button at the bottom: `[ Analyze Data ]`. This button must be **disabled** by default, and only become **enabled/clickable** once both file variables are populated.
 
 ## Logic Module: The Parser
@@ -61,3 +61,4 @@ If parsing is successful, destroy/hide Screen 1 and display Screen 2.
 
 # Output Rules
 Provide the entire, runnable Python code in a single code block. Ensure it includes generous comments explaining the logic, especially the state-management between screens and where Module 2 will easily plug in later.
+

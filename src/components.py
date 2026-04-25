@@ -1,7 +1,5 @@
 """
-components.py — Reusable UI Components for Instagram Auditor
-=============================================================
-Premium, reusable widget building-blocks used across all screens.
+components.py - Reusable UI components for Instagram Red Flags.
 """
 
 import customtkinter as ctk
@@ -9,10 +7,7 @@ from src.theme import Colors, Fonts, Spacing, Radius
 
 
 class GlassCard(ctk.CTkFrame):
-    """
-    A semi-transparent elevated card with rounded corners and subtle border.
-    Use this to visually group related content into distinct sections.
-    """
+    """A rounded card surface used to group related UI sections."""
 
     def __init__(self, master, **kwargs):
         super().__init__(
@@ -21,12 +16,12 @@ class GlassCard(ctk.CTkFrame):
             corner_radius=Radius.LG,
             border_width=1,
             border_color=Colors.BORDER,
-            **kwargs
+            **kwargs,
         )
 
 
 class GlassCardAlt(ctk.CTkFrame):
-    """Alternate shade card for visual variety (e.g., stat boxes)."""
+    """Alternate shade card for stat blocks and compact sections."""
 
     def __init__(self, master, **kwargs):
         super().__init__(
@@ -35,17 +30,12 @@ class GlassCardAlt(ctk.CTkFrame):
             corner_radius=Radius.MD,
             border_width=1,
             border_color=Colors.BORDER,
-            **kwargs
+            **kwargs,
         )
 
 
 class StatusLabel(ctk.CTkLabel):
-    """
-    A label that dynamically switches between default/success/error states.
-    - Default: muted gray text
-    - Success: green text with ✓
-    - Error: red text with ✗
-    """
+    """Label that can switch between default, success, and error states."""
 
     def __init__(self, master, default_text: str = "", **kwargs):
         self._default_text = default_text
@@ -55,109 +45,94 @@ class StatusLabel(ctk.CTkLabel):
             font=Fonts.BODY,
             text_color=Colors.TEXT_MUTED,
             anchor="w",
-            **kwargs
+            **kwargs,
         )
 
     def set_success(self, text: str):
-        """Switch to green success state."""
-        self.configure(
-            text=f"✓  {text}",
-            text_color=Colors.SUCCESS
-        )
+        self.configure(text=f"[OK]  {text}", text_color=Colors.SUCCESS)
 
     def set_error(self, text: str):
-        """Switch to red error state."""
-        self.configure(
-            text=f"✗  {text}",
-            text_color=Colors.DANGER
-        )
+        self.configure(text=f"[X]  {text}", text_color=Colors.DANGER)
 
     def reset(self):
-        """Return to default muted state."""
-        self.configure(
-            text=self._default_text,
-            text_color=Colors.TEXT_MUTED
-        )
+        self.configure(text=self._default_text, text_color=Colors.TEXT_MUTED)
 
 
 class HeroStat(ctk.CTkFrame):
-    """
-    A large, visually striking statistic display.
-    Shows a massive number with a descriptive label below it.
-    Used for the non-followers count "hook" and export summary.
-    """
+    """Large visual statistic block for key values."""
 
-    def __init__(self, master, number: str = "0", label: str = "",
-                 number_color: str = Colors.DANGER_BRIGHT,
-                 label_color: str = Colors.TEXT_SECONDARY, **kwargs):
+    def __init__(
+        self,
+        master,
+        number: str = "0",
+        label: str = "",
+        number_color: str = Colors.DANGER_BRIGHT,
+        label_color: str = Colors.TEXT_SECONDARY,
+        **kwargs,
+    ):
         super().__init__(master, fg_color="transparent", **kwargs)
 
-        # The big number
         self.number_label = ctk.CTkLabel(
             self,
             text=number,
             font=Fonts.HERO,
-            text_color=number_color
+            text_color=number_color,
         )
         self.number_label.pack(pady=(Spacing.SM, Spacing.XS))
 
-        # Descriptive text below
         self.desc_label = ctk.CTkLabel(
             self,
             text=label,
             font=Fonts.SUBHEADING,
-            text_color=label_color
+            text_color=label_color,
         )
         self.desc_label.pack(pady=(0, Spacing.SM))
 
     def update_stat(self, number: str, label: str = None):
-        """Update the displayed number and optionally the label."""
         self.number_label.configure(text=number)
         if label is not None:
             self.desc_label.configure(text=label)
 
 
 class StatCard(ctk.CTkFrame):
-    """
-    A compact stat card showing a value and description.
-    Used in the side-by-side summary stats (following/followers count).
-    """
+    """Compact value + label card used in summary rows."""
 
-    def __init__(self, master, value: str = "0", description: str = "",
-                 value_color: str = Colors.ACCENT_LIGHT, **kwargs):
+    def __init__(
+        self,
+        master,
+        value: str = "0",
+        description: str = "",
+        value_color: str = Colors.ACCENT_LIGHT,
+        **kwargs,
+    ):
         super().__init__(
             master,
             fg_color=Colors.BG_CARD,
             corner_radius=Radius.MD,
             border_width=1,
             border_color=Colors.BORDER,
-            **kwargs
+            **kwargs,
         )
 
-        # Value (large, colored)
         self.value_label = ctk.CTkLabel(
             self,
             text=value,
             font=Fonts.HEADING,
-            text_color=value_color
+            text_color=value_color,
         )
         self.value_label.pack(pady=(Spacing.LG, Spacing.XS))
 
-        # Description (smaller, muted)
         self.desc_label = ctk.CTkLabel(
             self,
             text=description,
             font=Fonts.BODY,
-            text_color=Colors.TEXT_SECONDARY
+            text_color=Colors.TEXT_SECONDARY,
         )
         self.desc_label.pack(pady=(0, Spacing.LG))
 
 
 class ActionButton(ctk.CTkButton):
-    """
-    A premium styled button with hover animation.
-    Supports 'primary', 'secondary', and 'danger' variants.
-    """
+    """Styled button wrapper supporting project variants."""
 
     VARIANTS = {
         "primary": {
@@ -184,10 +159,16 @@ class ActionButton(ctk.CTkButton):
         },
     }
 
-    def __init__(self, master, text: str = "", variant: str = "primary",
-                 height: int = 44, font=None, **kwargs):
+    def __init__(
+        self,
+        master,
+        text: str = "",
+        variant: str = "primary",
+        height: int = 44,
+        font=None,
+        **kwargs,
+    ):
         style = self.VARIANTS.get(variant, self.VARIANTS["primary"]).copy()
-        # Allow kwargs to override variant defaults
         for key in list(style.keys()):
             if key in kwargs:
                 style.pop(key)
@@ -199,12 +180,12 @@ class ActionButton(ctk.CTkButton):
             height=height,
             corner_radius=Radius.MD,
             **style,
-            **kwargs
+            **kwargs,
         )
 
 
 class SectionTitle(ctk.CTkLabel):
-    """A styled section heading with consistent formatting."""
+    """Section heading helper with consistent styling."""
 
     def __init__(self, master, text: str = "", **kwargs):
         super().__init__(
@@ -213,12 +194,12 @@ class SectionTitle(ctk.CTkLabel):
             font=Fonts.HEADING,
             text_color=Colors.TEXT_PRIMARY,
             anchor="w",
-            **kwargs
+            **kwargs,
         )
 
 
 class SubtitleLabel(ctk.CTkLabel):
-    """A muted subtitle / helper text label."""
+    """Muted subtitle/helper label."""
 
     def __init__(self, master, text: str = "", **kwargs):
         super().__init__(
@@ -227,32 +208,32 @@ class SubtitleLabel(ctk.CTkLabel):
             font=Fonts.SMALL,
             text_color=Colors.TEXT_MUTED,
             anchor="w",
-            **kwargs
+            **kwargs,
         )
 
 
 class ToastPopup(ctk.CTkToplevel):
-    """
-    A temporary popup notification (success/error/info).
-    Auto-closes after a set duration, or can be dismissed manually.
-    """
+    """Temporary popup notification for info, success, warning, and error."""
 
-    def __init__(self, master, title: str = "Notice",
-                 message: str = "", toast_type: str = "info",
-                 duration_ms: int = 3000, **kwargs):
+    def __init__(
+        self,
+        master,
+        title: str = "Notice",
+        message: str = "",
+        toast_type: str = "info",
+        duration_ms: int = 3000,
+        **kwargs,
+    ):
         super().__init__(master, **kwargs)
 
-        # Window setup
         self.title(title)
         self.geometry("400x180")
         self.resizable(False, False)
         self.configure(fg_color=Colors.BG_DARK)
 
-        # Bring to front
         self.attributes("-topmost", True)
         self.grab_set()
 
-        # Color based on type
         color_map = {
             "success": Colors.SUCCESS,
             "error": Colors.DANGER,
@@ -261,43 +242,47 @@ class ToastPopup(ctk.CTkToplevel):
         }
         accent = color_map.get(toast_type, Colors.ACCENT_LIGHT)
 
-        # Icon + Title
-        icon_map = {"success": "✓", "error": "✗", "info": "ℹ", "warning": "⚠"}
-        icon = icon_map.get(toast_type, "ℹ")
+        icon_map = {
+            "success": "[OK]",
+            "error": "[X]",
+            "info": "[i]",
+            "warning": "[!]",
+        }
+        icon = icon_map.get(toast_type, "[i]")
 
         header = ctk.CTkLabel(
             self,
             text=f"{icon}  {title}",
             font=Fonts.SUBHEADING,
-            text_color=accent
+            text_color=accent,
         )
         header.pack(pady=(Spacing.XL, Spacing.SM))
 
-        # Message body
         body = ctk.CTkLabel(
             self,
             text=message,
             font=Fonts.BODY,
             text_color=Colors.TEXT_SECONDARY,
-            wraplength=350
+            wraplength=350,
         )
         body.pack(pady=(0, Spacing.LG))
 
-        # OK button
         ok_btn = ActionButton(
-            self, text="OK", variant="primary",
-            width=100, height=36,
-            command=self.destroy
+            self,
+            text="OK",
+            variant="primary",
+            width=100,
+            height=36,
+            command=self.destroy,
         )
         ok_btn.pack(pady=(0, Spacing.LG))
 
-        # Auto-close after duration (0 = manual only)
         if duration_ms > 0:
             self.after(duration_ms, self._safe_destroy)
 
     def _safe_destroy(self):
-        """Destroy only if still alive."""
         try:
             self.destroy()
         except Exception:
             pass
+

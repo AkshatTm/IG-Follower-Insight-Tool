@@ -81,7 +81,7 @@ class ScreenResults(ctk.CTkFrame):
 
         title = ctk.CTkLabel(
             header,
-            text="Quick Analysis Results",
+            text="Quick Analysis Complete",
             font=Fonts.TITLE,
             text_color=Colors.TEXT_PRIMARY
         )
@@ -192,7 +192,7 @@ class ScreenResults(ctk.CTkFrame):
 
         deep_btn = ActionButton(
             deep_frame,
-            text="🔬  Deep Scan",
+            text="🔬  Deep Scan (Identify Influencers)",
             variant="primary",
             height=54,
             command=self._on_deep_scan
@@ -201,7 +201,7 @@ class ScreenResults(ctk.CTkFrame):
 
         deep_hint = SubtitleLabel(
             deep_frame,
-            text="Filter out influencers & VIPs"
+            text="Requires a burner account to filter verified/famous accounts"
         )
         deep_hint.pack(anchor="center", pady=(Spacing.XS, 0))
 
@@ -221,13 +221,8 @@ class ScreenResults(ctk.CTkFrame):
         if filepath:
             try:
                 with open(filepath, "w", encoding="utf-8") as f:
-                    f.write(
-                        f"Instagram Auditor — Non-Followers Report\n"
-                        f"{'=' * 42}\n"
-                        f"Total: {self.non_followers_count} accounts\n\n"
-                    )
                     for username in self.non_followers:
-                        f.write(f"@{username}\n")
+                        f.write(f"{username}\n")
 
                 # Success popup, then quit
                 ToastPopup(
@@ -254,6 +249,6 @@ class ScreenResults(ctk.CTkFrame):
         Transition to Module 2 — Screen 3 (Smart Filter).
         This is where the user can whitelist VIPs/influencers.
         """
-        print("Transitioning to Module 2 — Deep Scan...")
+        print("Transitioning to Module 2...")
         from src.screens.screen_filter import ScreenFilter
         self.app.switch_screen(ScreenFilter)

@@ -1,7 +1,7 @@
-### PROJECT: Instagram Auditor App - Module 2 (Deep Scan & Management)
+﻿### PROJECT: Instagram Red Flags App - Module 2 (Deep Scan & Management)
 
 **Role:** You are an expert Python developer specializing in `CustomTkinter` and Data Structures.
-**Context:** We are building an "Instagram Auditor" desktop app.
+**Context:** We are building an "Instagram Red Flags" desktop app.
 * **Module 1 (Completed):** Handles the JSON file upload, calculates the "Non-Followers" (Set Difference: `Following - Followers`), and displays a basic count on Screen 2.
 * **Current State:** The user has clicked the **"Deep Scan (Identify Influencers)"** button on Screen 2.
 * **Data Availability:** You have access to the `non_followers` set (a list of strings) generated in Module 1.
@@ -56,3 +56,4 @@ Write the Python code for **Module 2**, which acts as the "Manager & Export" eng
 
 **Output:**
 Provide the complete, functional Python code for Screen 3 and Screen 4, including the JSON read/write logic for the whitelist.
+

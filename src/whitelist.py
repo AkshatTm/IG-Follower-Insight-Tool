@@ -14,6 +14,16 @@ from typing import Set
 WHITELIST_FILE = "whitelist.json"
 
 
+def _write_empty_whitelist(filepath: str):
+    """Create/reset an empty whitelist file without raising UI-breaking errors."""
+    try:
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump([], f, indent=2, ensure_ascii=False)
+    except OSError:
+        # Non-fatal: app can still continue with in-memory whitelist state.
+        pass
+
+
 def load_whitelist(filepath: str = WHITELIST_FILE) -> Set[str]:
     """
     Load the whitelist from a JSON file.
@@ -28,16 +38,24 @@ def load_whitelist(filepath: str = WHITELIST_FILE) -> Set[str]:
         Set of whitelisted usernames.
     """
     if not os.path.exists(filepath):
+        _write_empty_whitelist(filepath)
         return set()
 
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
             if isinstance(data, list):
-                return set(data)
+                cleaned = {
+                    str(username).strip()
+                    for username in data
+                    if isinstance(username, str) and str(username).strip()
+                }
+                return cleaned
+            _write_empty_whitelist(filepath)
             return set()
     except (json.JSONDecodeError, IOError):
         # Corrupted file — start fresh
+        _write_empty_whitelist(filepath)
         return set()
 
 
