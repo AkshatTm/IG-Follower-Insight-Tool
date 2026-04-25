@@ -148,6 +148,12 @@ class ScreenFilter(ctk.CTkFrame):
 
     def _populate_rows(self):
         """Create a row for each non-follower with a VIP toggle switch."""
+        def create_toggle_handler(v):
+            def handler(event=None):
+                v.set(not v.get())
+                self._update_counter()
+            return handler
+
         for username in self.non_followers:
             # Create a BooleanVar for this user's VIP state
             var = ctk.BooleanVar(
@@ -159,7 +165,8 @@ class ScreenFilter(ctk.CTkFrame):
             row = ctk.CTkFrame(
                 self.scroll_frame,
                 fg_color="transparent",
-                height=40
+                height=40,
+                cursor="hand2"
             )
             row.pack(fill="x", padx=Spacing.MD, pady=2)
 
@@ -169,7 +176,8 @@ class ScreenFilter(ctk.CTkFrame):
                 text=f"@{username}",
                 font=Fonts.BODY,
                 text_color=Colors.TEXT_PRIMARY,
-                anchor="w"
+                anchor="w",
+                cursor="hand2"
             )
             user_label.pack(side="left", fill="x", expand=True)
 
@@ -188,6 +196,15 @@ class ScreenFilter(ctk.CTkFrame):
                 command=self._update_counter
             )
             switch.pack(side="right")
+
+            # Bind click events for row-level toggling
+            handler = create_toggle_handler(var)
+            row.bind("<Button-1>", handler)
+            if hasattr(row, "_canvas"):
+                row._canvas.bind("<Button-1>", handler)
+            user_label.bind("<Button-1>", handler)
+            if hasattr(user_label, "_label"):
+                user_label._label.bind("<Button-1>", handler)
 
             # Store reference for search filtering
             self._row_widgets[username] = row
