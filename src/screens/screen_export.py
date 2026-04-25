@@ -211,7 +211,11 @@ class ScreenExport(ctk.CTkFrame):
                     writer = csv.writer(f)
                     writer.writerow(["Username", "Status"])
                     for username in self.final_list:
-                        writer.writerow([username, "To Unfollow"])
+                        # Prevent CSV Injection (Formula Injection)
+                        safe_username = username
+                        if safe_username.startswith(("=", "+", "-", "@")):
+                            safe_username = f"'{safe_username}"
+                        writer.writerow([safe_username, "To Unfollow"])
 
                 ToastPopup(
                     self.app,
