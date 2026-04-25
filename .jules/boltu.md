@@ -1,0 +1,6 @@
+## 2024-04-25 - Tkinter Search Debouncing and Layout Optimization
+**Learning:** Calling `pack()` or `pack_forget()` on thousands of Tkinter widgets during rapid keystrokes completely blocks the main thread. Furthermore, calling `pack()` on an already packed widget, or `pack_forget()` on an already hidden widget, triggers unnecessary layout recalculations.
+**Action:** Always debounce text input events that trigger layout changes (`after()` method). Additionally, check `winfo_ismapped()` before applying layout changes to avoid redundant Tkinter operations.
+## 2024-04-25 - Tkinter Layout State Checks
+**Learning:** `winfo_ismapped()` checks if a widget is currently visible/drawn on screen, NOT if it is managed by the layout manager. Using it to optimize `pack()` or `pack_forget()` calls leads to bugs (e.g., if the window is minimized or hidden when the check runs). Furthermore, calling `pack_forget()` on an already hidden widget is virtually a no-op in Tkinter, making manual state checks unnecessary.
+**Action:** Do not use `winfo_ismapped()` to guard layout manager calls. Rely on debouncing to prevent excessive layout thrashing, and let Tkinter handle redundant `pack_forget()` operations safely.

@@ -40,6 +40,8 @@ class ScreenFilter(ctk.CTkFrame):
         self._row_widgets = {}
         # Select-all toggle state
         self._all_selected = False
+        # Track debounce job for search
+        self._search_job = None
 
         self._build_ui()
 
@@ -233,12 +235,20 @@ class ScreenFilter(ctk.CTkFrame):
     # ─────────────────────────────────────
 
     def _on_search(self, event=None):
+        """Debounce the search input to avoid UI lag."""
+        if self._search_job is not None:
+            self.after_cancel(self._search_job)
+        self._search_job = self.after(300, self._perform_search)
+
+    def _perform_search(self):
         """Filter the visible rows based on search query."""
         query = self.search_entry.get().lower().strip()
 
         visible_count = 0
         for username, row_widget in self._row_widgets.items():
-            if query == "" or query in username.lower():
+            should_show = query == "" or query in username.lower()
+
+            if should_show:
                 row_widget.pack(fill="x", padx=Spacing.MD, pady=2)
                 visible_count += 1
             else:
