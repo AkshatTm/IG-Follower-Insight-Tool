@@ -236,10 +236,12 @@ class ScreenResults(ctk.CTkFrame):
                 self.app.after(3000, self.app.quit)
 
             except Exception as e:
+                # [SECURITY]: Do not leak exception details to the user to prevent path/system info exposure.
+                print(f"Export error: {e}")
                 ToastPopup(
                     self.app,
                     title="Export Failed",
-                    message=f"Could not save file: {str(e)[:120]}",
+                    message="Could not save file due to an unexpected error.",
                     toast_type="error",
                     duration_ms=0
                 )
