@@ -4,3 +4,6 @@
 ## 2024-04-25 - Tkinter Layout State Checks
 **Learning:** `winfo_ismapped()` checks if a widget is currently visible/drawn on screen, NOT if it is managed by the layout manager. Using it to optimize `pack()` or `pack_forget()` calls leads to bugs (e.g., if the window is minimized or hidden when the check runs). Furthermore, calling `pack_forget()` on an already hidden widget is virtually a no-op in Tkinter, making manual state checks unnecessary.
 **Action:** Do not use `winfo_ismapped()` to guard layout manager calls. Rely on debouncing to prevent excessive layout thrashing, and let Tkinter handle redundant `pack_forget()` operations safely.
+## 2024-05-24 - [Pagination for Large UI Lists in CustomTkinter]
+**Learning:** CustomTkinter completely freezes the main UI thread when instantiating thousands of widgets (e.g. 5000 rows in a CTkScrollableFrame took 10+ seconds). Furthermore, packing and repacking these widgets during search causes severe lag.
+**Action:** Always implement pagination (e.g. rendering 100 items with a "Load More" button) rather than rendering full lists simultaneously. However, always ensure the underlying state elements (like ctk.BooleanVar) are pre-initialized for *all* items upfront so the state is preserved across pagination and filtering resets.
