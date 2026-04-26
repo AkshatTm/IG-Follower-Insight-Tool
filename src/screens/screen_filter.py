@@ -34,10 +34,22 @@ class ScreenFilter(ctk.CTkFrame):
         self.non_followers = list(app.data["non_followers"])  # Mutable copy
         self.whitelist = load_whitelist()
 
-        # Track VIP switches: {username: BooleanVar}
-        self._vip_vars = {}
-        # Track row widgets for search filtering: {username: frame_widget}
+        # Pre-initialize variables for all users to preserve state
+        self._vip_vars = {
+            u: ctk.BooleanVar(value=(u in self.whitelist))
+            for u in self.non_followers
+        }
+
+        # Track rendered row widgets: {username: frame_widget}
         self._row_widgets = {}
+        # Track currently filtered users
+        self._filtered_users = self.non_followers.copy()
+
+        # Pagination state
+        self.PAGE_SIZE = 100
+        self._visible_limit = self.PAGE_SIZE
+        self._load_more_btn = None
+
         # Select-all toggle state
         self._all_selected = False
         # Track debounce job for search
@@ -146,20 +158,28 @@ class ScreenFilter(ctk.CTkFrame):
         # Populate rows
         self._populate_rows()
 
-    def _populate_rows(self):
-        """Create a row for each non-follower with a VIP toggle switch."""
+    def _populate_rows(self, clear=False):
+        """Create a row for each non-follower with a VIP toggle switch. Uses pagination."""
+        if clear:
+            for widget in self._row_widgets.values():
+                widget.destroy()
+            self._row_widgets.clear()
+
+        if self._load_more_btn is not None and self._load_more_btn.winfo_exists():
+            self._load_more_btn.destroy()
+
+        start_idx = len(self._row_widgets)
+        end_idx = min(self._visible_limit, len(self._filtered_users))
+
         def create_toggle_handler(v):
             def handler(event=None):
                 v.set(not v.get())
                 self._update_counter()
             return handler
 
-        for username in self.non_followers:
-            # Create a BooleanVar for this user's VIP state
-            var = ctk.BooleanVar(
-                value=(username in self.whitelist)
-            )
-            self._vip_vars[username] = var
+        for i in range(start_idx, end_idx):
+            username = self._filtered_users[i]
+            var = self._vip_vars[username]
 
             # Row frame
             row = ctk.CTkFrame(
@@ -206,8 +226,24 @@ class ScreenFilter(ctk.CTkFrame):
             if hasattr(user_label, "_label"):
                 user_label._label.bind("<Button-1>", handler)
 
-            # Store reference for search filtering
+            # Store reference for destroying later
             self._row_widgets[username] = row
+
+        if self._visible_limit < len(self._filtered_users):
+            from src.components import ActionButton
+            self._load_more_btn = ActionButton(
+                self.scroll_frame,
+                text="Load More",
+                variant="secondary",
+                height=36,
+                command=self._load_more
+            )
+            self._load_more_btn.pack(pady=(Spacing.MD, Spacing.MD))
+
+    def _load_more(self):
+        """Load the next batch of users."""
+        self._visible_limit += self.PAGE_SIZE
+        self._populate_rows()
 
     def _build_footer(self, parent):
         """Footer with Select All toggle, counter, and Next button."""
@@ -258,23 +294,23 @@ class ScreenFilter(ctk.CTkFrame):
         self._search_job = self.after(300, self._perform_search)
 
     def _perform_search(self):
-        """Filter the visible rows based on search query."""
+        """Filter the visible rows based on search query using pagination."""
         query = self.search_entry.get().lower().strip()
 
-        visible_count = 0
-        for username, row_widget in self._row_widgets.items():
-            should_show = query == "" or query in username.lower()
+        if query == "":
+            self._filtered_users = self.non_followers.copy()
+        else:
+            self._filtered_users = [
+                u for u in self.non_followers if query in u.lower()
+            ]
 
-            if should_show:
-                row_widget.pack(fill="x", padx=Spacing.MD, pady=2)
-                visible_count += 1
-            else:
-                row_widget.pack_forget()
+        self._visible_limit = self.PAGE_SIZE
+        self._populate_rows(clear=True)
 
         # Update subtitle with filtered count
         if query:
             self.subtitle.configure(
-                text=f"Showing {visible_count} of {len(self.non_followers)} users (filtered)"
+                text=f"Showing {len(self._filtered_users)} of {len(self.non_followers)} users (filtered)"
             )
         else:
             self.subtitle.configure(
@@ -282,11 +318,12 @@ class ScreenFilter(ctk.CTkFrame):
             )
 
     def _toggle_select_all(self):
-        """Toggle all VIP switches on/off."""
+        """Toggle all VIP switches on/off for currently filtered users."""
         self._all_selected = not self._all_selected
 
-        for var in self._vip_vars.values():
-            var.set(self._all_selected)
+        for username in self._filtered_users:
+            if username in self._vip_vars:
+                self._vip_vars[username].set(self._all_selected)
 
         if self._all_selected:
             self.select_all_btn.configure(text="☑  Deselect All")
