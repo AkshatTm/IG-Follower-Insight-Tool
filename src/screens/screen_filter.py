@@ -15,7 +15,7 @@ Features:
 import customtkinter as ctk
 from src.theme import Colors, Fonts, Spacing, Radius
 from src.components import (
-    GlassCard, ActionButton, SubtitleLabel, ToastPopup
+    GlassCard, ActionButton
 )
 from src.whitelist import load_whitelist, save_whitelist
 
@@ -142,6 +142,14 @@ class ScreenFilter(ctk.CTkFrame):
             scrollbar_button_hover_color=Colors.ACCENT_PRIMARY
         )
         self.scroll_frame.pack(fill="both", expand=True, padx=Spacing.SM, pady=Spacing.SM)
+
+        # Empty state label
+        self.empty_state_label = ctk.CTkLabel(
+            self.scroll_frame,
+            text="No users found matching your search.",
+            font=Fonts.BODY,
+            text_color=Colors.TEXT_MUTED
+        )
 
         # Populate rows
         self._populate_rows()
@@ -270,6 +278,11 @@ class ScreenFilter(ctk.CTkFrame):
                 visible_count += 1
             else:
                 row_widget.pack_forget()
+
+        if visible_count == 0:
+            self.empty_state_label.pack(pady=Spacing.XL)
+        else:
+            self.empty_state_label.pack_forget()
 
         # Update subtitle with filtered count
         if query:
