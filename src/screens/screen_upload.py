@@ -254,13 +254,14 @@ class ScreenUpload(ctk.CTkFrame):
             self.app.switch_screen(ScreenResults)
 
         except Exception as e:
+            # [SECURITY]: Do not leak exception details to the user to prevent path/system info exposure.
+            print(f"Parsing error: {e}")
             ToastPopup(
                 self.app,
                 title="Parsing Error",
                 message=(
                     "Invalid JSON format. Please ensure you downloaded "
-                    "the correct Instagram data.\n\n"
-                    f"Details: {str(e)[:120]}"
+                    "the correct Instagram data."
                 ),
                 toast_type="error",
                 duration_ms=0,
