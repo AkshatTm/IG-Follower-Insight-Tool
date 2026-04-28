@@ -11,3 +11,8 @@
 **Vulnerability:** The application was exposing raw exception messages (`str(e)`) to the UI via `ToastPopup` upon export and parsing failures in `screen_export.py`, `screen_results.py`, and `screen_upload.py`.
 **Learning:** This could leak sensitive system information such as directory structures and local file paths (e.g., if a `FileNotFoundError` occurs during export, the full path is shown to the user).
 **Prevention:** Catch exceptions and log them using a secure backend mechanism (like `print` for a CLI or a logging framework), while displaying a generic, sanitized, user-friendly error message in the UI instead.
+
+## 2024-04-28 - Prevent Injection via Input Sanitization
+**Vulnerability:** Usernames extracted from JSON data were not strictly sanitized. While some downstream functions had basic protections (like CSV quoting), a maliciously crafted JSON file or an attacker injecting their username could introduce payloads (like `=cmd|' /C calc'!A0` for DDE/CSV injection, or XSS payloads).
+**Learning:** Defense in depth requires data to be sanitized as close to the input boundary as possible. Even internal/local tools should enforce expected formats.
+**Prevention:** Implement strict input sanitization at the parsing layer. For usernames, use a regular expression allowlist (e.g., `re.sub(r'[^a-zA-Z0-9._]', '', username)`) to strip any character that isn't explicitly permitted in the application's domain logic, thereby neutralizing injection attacks proactively.

@@ -10,6 +10,7 @@ try multiple known patterns to extract usernames.
 
 import json
 import os
+import re
 from typing import Set, List
 
 
@@ -100,29 +101,38 @@ def _extract_username(entry: dict) -> str | None:
     # massive strings from freezing the UI when rendered (DoS mitigation).
     max_len = 100
 
+    def clean(val: str) -> str | None:
+        if isinstance(val, str) and val.strip():
+            # [SECURITY]: Sanitize input to only allow valid Instagram username
+            # characters (alphanumeric, dot, underscore) to prevent downstream
+            # injection attacks (e.g. CSV/Formula injection, XSS if rendered).
+            sanitized = re.sub(r'[^a-zA-Z0-9._]', '', val.strip()[:max_len])
+            return sanitized if sanitized else None
+        return None
+
     # Pattern A: string_list_data array (most common Instagram format)
     try:
         sld = entry.get("string_list_data", [])
         if isinstance(sld, list) and len(sld) > 0:
-            value = sld[0].get("value", "")
-            if isinstance(value, str) and value.strip():
-                return value.strip()[:max_len]
+            val = clean(sld[0].get("value", ""))
+            if val:
+                return val
     except (AttributeError, IndexError, TypeError):
         pass
 
     # Pattern C: Flat {"value": "username"}
     try:
-        value = entry.get("value", "")
-        if isinstance(value, str) and value.strip():
-            return value.strip()[:max_len]
+        val = clean(entry.get("value", ""))
+        if val:
+            return val
     except (AttributeError, TypeError):
         pass
 
     # Pattern D: Direct {"username": "username"}
     try:
-        value = entry.get("username", "")
-        if isinstance(value, str) and value.strip():
-            return value.strip()[:max_len]
+        val = clean(entry.get("username", ""))
+        if val:
+            return val
     except (AttributeError, TypeError):
         pass
 
