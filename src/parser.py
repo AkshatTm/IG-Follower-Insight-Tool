@@ -9,6 +9,7 @@ try multiple known patterns to extract usernames.
 """
 
 import json
+import os
 from typing import Set, List
 
 
@@ -31,6 +32,16 @@ def parse_instagram_json(filepath: str) -> Set[str]:
         ValueError: If the JSON structure is unrecognized.
         json.JSONDecodeError: If the file is not valid JSON.
     """
+    # Security: Prevent Memory Exhaustion (DoS)
+    # Check if the file is excessively large (limit to 100MB) before parsing.
+    # Parsing very large JSON files into memory can cause the application to crash.
+    max_size_bytes = 100 * 1024 * 1024
+    if os.path.getsize(filepath) > max_size_bytes:
+        raise ValueError(
+            "File too large. Maximum allowed size is 100MB to "
+            "prevent memory exhaustion."
+        )
+
     with open(filepath, "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -85,13 +96,17 @@ def _extract_username(entry: dict) -> str | None:
     if not isinstance(entry, dict):
         return None
 
+    # Security: Limit username length to 100 characters to prevent artificially
+    # massive strings from freezing the UI when rendered (DoS mitigation).
+    max_len = 100
+
     # Pattern A: string_list_data array (most common Instagram format)
     try:
         sld = entry.get("string_list_data", [])
         if isinstance(sld, list) and len(sld) > 0:
             value = sld[0].get("value", "")
             if isinstance(value, str) and value.strip():
-                return value.strip()
+                return value.strip()[:max_len]
     except (AttributeError, IndexError, TypeError):
         pass
 
@@ -99,7 +114,7 @@ def _extract_username(entry: dict) -> str | None:
     try:
         value = entry.get("value", "")
         if isinstance(value, str) and value.strip():
-            return value.strip()
+            return value.strip()[:max_len]
     except (AttributeError, TypeError):
         pass
 
@@ -107,7 +122,7 @@ def _extract_username(entry: dict) -> str | None:
     try:
         value = entry.get("username", "")
         if isinstance(value, str) and value.strip():
-            return value.strip()
+            return value.strip()[:max_len]
     except (AttributeError, TypeError):
         pass
 
