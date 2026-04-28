@@ -155,6 +155,14 @@ class ScreenFilter(ctk.CTkFrame):
         )
         self.scroll_frame.pack(fill="both", expand=True, padx=Spacing.SM, pady=Spacing.SM)
 
+        # Empty state label
+        self.empty_state_label = ctk.CTkLabel(
+            self.scroll_frame,
+            text="No users found matching your search.",
+            font=Fonts.BODY,
+            text_color=Colors.TEXT_MUTED
+        )
+
         # Populate rows
         self._populate_rows()
 
@@ -324,6 +332,11 @@ class ScreenFilter(ctk.CTkFrame):
             else:
                 self.empty_state_label.configure(text="No users match your search.")
             self.empty_state_label.pack(pady=40)
+        else:
+            self.empty_state_label.pack_forget()
+
+        if visible_count == 0:
+            self.empty_state_label.pack(pady=Spacing.XL)
         else:
             self.empty_state_label.pack_forget()
 
