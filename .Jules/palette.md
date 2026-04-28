@@ -5,3 +5,7 @@
 ## 2024-05-18 - Search/Filter Empty States
 **Learning:** During filtering operations (like the Smart Filter Dashboard), an empty result list without a message looks like a bug or incomplete load. Adding explicit empty states ("No users match your search.") provides necessary feedback and assures the user the app is functioning correctly.
 **Action:** When implementing real-time search or filterable lists, always include a hidden-by-default empty state label that is toggled on when the number of visible rows reaches zero.
+
+## 2024-05-19 - Duplicate Render Handling
+**Learning:** Having multiple overlapping methods (like duplicate `_populate_rows` definitions) handling UI state and empty-state toggling leads to unpredictable blank screens and visual bugs.
+**Action:** Always ensure a single source of truth for list rendering and empty state fallback toggles.
