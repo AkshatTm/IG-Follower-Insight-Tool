@@ -10,6 +10,7 @@ try multiple known patterns to extract usernames.
 
 import json
 import os
+import re
 from typing import Set, List
 
 
@@ -100,13 +101,17 @@ def _extract_username(entry: dict) -> str | None:
     # massive strings from freezing the UI when rendered (DoS mitigation).
     max_len = 100
 
+    def _sanitize(uname: str) -> str:
+        # [SECURITY] Sanitize username using allowlist to neutralize downstream injection vulnerabilities
+        return re.sub(r'[^a-zA-Z0-9._]', '', uname)[:max_len]
+
     # Pattern A: string_list_data array (most common Instagram format)
     try:
         sld = entry.get("string_list_data", [])
         if isinstance(sld, list) and len(sld) > 0:
             value = sld[0].get("value", "")
             if isinstance(value, str) and value.strip():
-                return value.strip()[:max_len]
+                return _sanitize(value.strip())
     except (AttributeError, IndexError, TypeError):
         pass
 
@@ -114,7 +119,7 @@ def _extract_username(entry: dict) -> str | None:
     try:
         value = entry.get("value", "")
         if isinstance(value, str) and value.strip():
-            return value.strip()[:max_len]
+            return _sanitize(value.strip())
     except (AttributeError, TypeError):
         pass
 
@@ -122,7 +127,7 @@ def _extract_username(entry: dict) -> str | None:
     try:
         value = entry.get("username", "")
         if isinstance(value, str) and value.strip():
-            return value.strip()[:max_len]
+            return _sanitize(value.strip())
     except (AttributeError, TypeError):
         pass
 

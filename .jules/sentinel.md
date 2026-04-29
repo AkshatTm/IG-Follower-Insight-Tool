@@ -11,3 +11,8 @@
 **Vulnerability:** The application was exposing raw exception messages (`str(e)`) to the UI via `ToastPopup` upon export and parsing failures in `screen_export.py`, `screen_results.py`, and `screen_upload.py`.
 **Learning:** This could leak sensitive system information such as directory structures and local file paths (e.g., if a `FileNotFoundError` occurs during export, the full path is shown to the user).
 **Prevention:** Catch exceptions and log them using a secure backend mechanism (like `print` for a CLI or a logging framework), while displaying a generic, sanitized, user-friendly error message in the UI instead.
+
+## 2024-05-18 - Strict Sanitization at Parsing Layer
+**Vulnerability:** Extracted usernames from JSON files were not strictly sanitized before being stored in the app state. This allowed users to potentially inject characters that bypass later checks or cause issues in CSV export (Format/CSV Injection) if the earlier defense in `screen_export.py` was flawed.
+**Learning:** It's safer to neutralize malicious input as close to the source (the parser) as possible using an allowlist approach, rather than relying solely on escaping later in the pipeline.
+**Prevention:** Strictly sanitize parsed data using an allowlist (e.g., `re.sub(r'[^a-zA-Z0-9._]', '', username)`) to ensure downstream components only ever handle clean data.
