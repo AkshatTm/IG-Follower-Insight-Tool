@@ -7,3 +7,6 @@
 ## 2024-05-24 - [Pagination for Large UI Lists in CustomTkinter]
 **Learning:** CustomTkinter completely freezes the main UI thread when instantiating thousands of widgets (e.g. 5000 rows in a CTkScrollableFrame took 10+ seconds). Furthermore, packing and repacking these widgets during search causes severe lag.
 **Action:** Always implement pagination (e.g. rendering 100 items with a "Load More" button) rather than rendering full lists simultaneously. However, always ensure the underlying state elements (like ctk.BooleanVar) are pre-initialized for *all* items upfront so the state is preserved across pagination and filtering resets.
+## 2024-04-29 - Dictionary parsing optimization
+**Learning:** In Python, handling many missing keys using `try/except` and `.get()` blocks within loops over large JSON arrays is slower compared to directly checking for key existence via `in`. Avoid exception handling for normal control flows that occur frequently.
+**Action:** Use direct key existence checks (`if 'key' in dict:`) instead of `try/except` blocks for dictionary lookups.
