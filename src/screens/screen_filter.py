@@ -179,17 +179,6 @@ class ScreenFilter(ctk.CTkFrame):
         start_idx = len(self._row_widgets)
         end_idx = min(self._visible_limit, len(self._filtered_users))
 
-        # Empty state label (hidden by default)
-        self.empty_state_label = ctk.CTkLabel(
-            self.scroll_frame,
-            text="",
-            font=Fonts.BODY,
-            text_color=Colors.TEXT_MUTED
-        )
-        self._perform_search()
-
-    def _populate_rows(self):
-        """Create a row for each non-follower with a VIP toggle switch."""
         def create_toggle_handler(v):
             def handler(event=None):
                 v.set(not v.get())
@@ -326,16 +315,12 @@ class ScreenFilter(ctk.CTkFrame):
         self._visible_limit = self.PAGE_SIZE
         self._populate_rows(clear=True)
 
+        visible_count = len(self._filtered_users)
         if visible_count == 0:
             if len(self.non_followers) == 0:
                 self.empty_state_label.configure(text="No non-followers to filter! 🎉")
             else:
                 self.empty_state_label.configure(text="No users match your search.")
-            self.empty_state_label.pack(pady=40)
-        else:
-            self.empty_state_label.pack_forget()
-
-        if visible_count == 0:
             self.empty_state_label.pack(pady=Spacing.XL)
         else:
             self.empty_state_label.pack_forget()
