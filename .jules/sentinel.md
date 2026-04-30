@@ -11,3 +11,8 @@
 **Vulnerability:** The application was exposing raw exception messages (`str(e)`) to the UI via `ToastPopup` upon export and parsing failures in `screen_export.py`, `screen_results.py`, and `screen_upload.py`.
 **Learning:** This could leak sensitive system information such as directory structures and local file paths (e.g., if a `FileNotFoundError` occurs during export, the full path is shown to the user).
 **Prevention:** Catch exceptions and log them using a secure backend mechanism (like `print` for a CLI or a logging framework), while displaying a generic, sanitized, user-friendly error message in the UI instead.
+
+## 2024-04-30 - Prevent Format Injection via Export Ingestion Sanitization
+**Vulnerability:** External data sources like Instagram JSON exports can contain malicious payloads (e.g., usernames like `=cmd|' /C calc'!A0`) that bypass output filters if they aren't sanitized at the point of ingestion.
+**Learning:** Even if output sanitization (like CSV escaping) is present, defense-in-depth requires sanitizing user-controlled data immediately upon extraction from external sources to prevent injection across all downstream operations.
+**Prevention:** Use an allowlist regex (e.g., `re.sub(r'[^a-zA-Z0-9._]', '', username)`) during the parsing phase to strip out potentially dangerous characters before the data is stored in memory or passed to the UI layer.
