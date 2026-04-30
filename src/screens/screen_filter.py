@@ -35,10 +35,12 @@ class ScreenFilter(ctk.CTkFrame):
         self.whitelist = load_whitelist()
 
         # Pre-initialize variables for all users to preserve state
-        self._vip_vars = {
-            u: ctk.BooleanVar(value=(u in self.whitelist))
-            for u in self.non_followers
-        }
+        # Performance Optimization: Aggressively initializing hundreds of thousands
+        # of Tkinter Variables freezes the main thread. Instead, we store state in
+        # a standard dictionary and lazily instantiate the ctk.BooleanVar objects
+        # only when generating the UI widgets in the active pagination batch.
+        self._vip_state = {u: (u in self.whitelist) for u in self.non_followers}
+        self._vip_vars = {}
 
         # Track rendered row widgets: {username: frame_widget}
         self._row_widgets = {}
@@ -163,11 +165,11 @@ class ScreenFilter(ctk.CTkFrame):
             text_color=Colors.TEXT_MUTED
         )
 
-        # Populate rows
-        self._populate_rows()
+        # Start initial load
+        self._perform_search()
 
     def _populate_rows(self, clear=False):
-        """Create a row for each non-follower with a VIP toggle switch. Uses pagination."""
+        """Create a row for each non-follower with a VIP toggle switch."""
         if clear:
             for widget in self._row_widgets.values():
                 widget.destroy()
@@ -179,25 +181,19 @@ class ScreenFilter(ctk.CTkFrame):
         start_idx = len(self._row_widgets)
         end_idx = min(self._visible_limit, len(self._filtered_users))
 
-        # Empty state label (hidden by default)
-        self.empty_state_label = ctk.CTkLabel(
-            self.scroll_frame,
-            text="",
-            font=Fonts.BODY,
-            text_color=Colors.TEXT_MUTED
-        )
-        self._perform_search()
-
-    def _populate_rows(self):
-        """Create a row for each non-follower with a VIP toggle switch."""
         def create_toggle_handler(v):
             def handler(event=None):
                 v.set(not v.get())
                 self._update_counter()
             return handler
 
+        # Get variables required for currently rendered rows only
         for i in range(start_idx, end_idx):
             username = self._filtered_users[i]
+
+            # Lazy-load tk.BooleanVar using stored plain dictionary state
+            if username not in self._vip_vars:
+                self._vip_vars[username] = ctk.BooleanVar(value=self._vip_state[username])
             var = self._vip_vars[username]
 
             # Row frame
@@ -326,16 +322,12 @@ class ScreenFilter(ctk.CTkFrame):
         self._visible_limit = self.PAGE_SIZE
         self._populate_rows(clear=True)
 
+        visible_count = len(self._filtered_users)
         if visible_count == 0:
             if len(self.non_followers) == 0:
                 self.empty_state_label.configure(text="No non-followers to filter! 🎉")
             else:
                 self.empty_state_label.configure(text="No users match your search.")
-            self.empty_state_label.pack(pady=40)
-        else:
-            self.empty_state_label.pack_forget()
-
-        if visible_count == 0:
             self.empty_state_label.pack(pady=Spacing.XL)
         else:
             self.empty_state_label.pack_forget()
@@ -355,6 +347,9 @@ class ScreenFilter(ctk.CTkFrame):
         self._all_selected = not self._all_selected
 
         for username in self._filtered_users:
+            # Update background state dictionary
+            self._vip_state[username] = self._all_selected
+            # Update Tk variable if it has been lazily loaded
             if username in self._vip_vars:
                 self._vip_vars[username].set(self._all_selected)
 
@@ -367,8 +362,12 @@ class ScreenFilter(ctk.CTkFrame):
 
     def _update_counter(self):
         """Update the VIP counter display."""
-        vip_count = sum(1 for var in self._vip_vars.values() if var.get())
-        total = len(self._vip_vars)
+        # Sync lazily-loaded Tk vars back to background state before computing
+        for username, var in self._vip_vars.items():
+            self._vip_state[username] = var.get()
+
+        vip_count = sum(1 for v in self._vip_state.values() if v)
+        total = len(self._vip_state)
         to_unfollow = total - vip_count
 
         self.counter_label.configure(
@@ -379,10 +378,14 @@ class ScreenFilter(ctk.CTkFrame):
         """
         Save the whitelist and transition to Screen 4 (Export).
         """
+        # Sync lazily-loaded Tk vars back to background state
+        for username, var in self._vip_vars.items():
+            self._vip_state[username] = var.get()
+
         # Collect whitelisted usernames
         whitelisted = set()
-        for username, var in self._vip_vars.items():
-            if var.get():
+        for username, is_vip in self._vip_state.items():
+            if is_vip:
                 whitelisted.add(username)
 
         # Save to whitelist.json
