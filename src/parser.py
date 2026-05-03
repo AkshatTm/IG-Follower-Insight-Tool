@@ -36,6 +36,15 @@ def parse_instagram_json(filepath: str) -> Set[str]:
     # Check if the file is excessively large (limit to 100MB) before parsing.
     # Parsing very large JSON files into memory can cause the application to crash.
     max_size_bytes = 100 * 1024 * 1024
+
+    # Check if the input is a regular file. Character devices like /dev/zero
+    # bypass the size limit (getsize returns 0) and lead to infinite reading.
+    if not os.path.isfile(filepath):
+        raise ValueError(
+            f"Invalid file path '{filepath}'. "
+            "Only regular files are allowed to prevent DoS attacks."
+        )
+
     if os.path.getsize(filepath) > max_size_bytes:
         raise ValueError(
             "File too large. Maximum allowed size is 100MB to "

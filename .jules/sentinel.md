@@ -11,3 +11,8 @@
 **Vulnerability:** The application was exposing raw exception messages (`str(e)`) to the UI via `ToastPopup` upon export and parsing failures in `screen_export.py`, `screen_results.py`, and `screen_upload.py`.
 **Learning:** This could leak sensitive system information such as directory structures and local file paths (e.g., if a `FileNotFoundError` occurs during export, the full path is shown to the user).
 **Prevention:** Catch exceptions and log them using a secure backend mechanism (like `print` for a CLI or a logging framework), while displaying a generic, sanitized, user-friendly error message in the UI instead.
+
+## 2024-05-03 - Prevent DoS via Infinite Stream Devices in Parser
+**Vulnerability:** The application used `os.path.getsize()` to check file sizes prior to parsing JSON files as a DoS mitigation. However, character device files (like `/dev/zero` or `/dev/urandom`) return a size of `0` in Python, bypassing the size check limit. Parsing such files via `json.load()` causes an infinite read operation that quickly exhausts system memory, leading to a Denial of Service.
+**Learning:** `os.path.getsize()` cannot be fully trusted as the sole DoS mitigation against massive files if the input could be a device stream instead of a regular file on disk.
+**Prevention:** Always verify `os.path.isfile(filepath)` alongside size checks when accepting user-provided local file paths to ensure the application is only attempting to parse regular files.
