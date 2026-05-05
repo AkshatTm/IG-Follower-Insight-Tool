@@ -285,4 +285,3 @@ class ToastPopup(ctk.CTkToplevel):
             self.destroy()
         except Exception:
             pass
-

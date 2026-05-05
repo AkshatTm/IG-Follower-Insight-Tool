@@ -10,7 +10,7 @@ from tkinter import filedialog
 
 import customtkinter as ctk
 from src.theme import Colors, Fonts, Spacing
-from src.components import GlassCard, GlassCardAlt, HeroStat, ActionButton, ToastPopup
+from src.components import GlassCard, GlassCardAlt, HeroStat, ActionButton, ToastPopup  # noqa: E501
 
 
 class ScreenExport(ctk.CTkFrame):
@@ -23,7 +23,11 @@ class ScreenExport(ctk.CTkFrame):
         non_followers = set(app.data["non_followers"])
         whitelist = app.data.get("whitelist", set())
 
-        self.final_list = sorted(list(non_followers - whitelist), key=str.lower)
+        self.final_list = sorted(
+            list(
+                non_followers -
+                whitelist),
+            key=str.lower)
         self.final_count = len(self.final_list)
         self.whitelist_count = len(whitelist)
         self.total_non_followers = len(non_followers)
@@ -107,7 +111,7 @@ class ScreenExport(ctk.CTkFrame):
         breakdown_frame.columnconfigure(2, weight=1)
 
         stats = [
-            (str(self.total_non_followers), "Total non-followers", Colors.TEXT_PRIMARY),
+            (str(self.total_non_followers), "Total non-followers", Colors.TEXT_PRIMARY),  # noqa: E501
             (f"-{self.whitelist_count}", "Whitelisted VIPs", Colors.SUCCESS),
             (str(self.final_count), "To unfollow", Colors.DANGER_BRIGHT),
         ]
@@ -116,7 +120,11 @@ class ScreenExport(ctk.CTkFrame):
             card = GlassCardAlt(breakdown_frame)
             card.grid(row=0, column=col, sticky="ew", padx=Spacing.XS)
 
-            val_label = ctk.CTkLabel(card, text=value, font=Fonts.HEADING, text_color=color)
+            val_label = ctk.CTkLabel(
+                card,
+                text=value,
+                font=Fonts.HEADING,
+                text_color=color)
             val_label.pack(pady=(Spacing.MD, Spacing.XS))
 
             desc_label = ctk.CTkLabel(
@@ -192,7 +200,7 @@ class ScreenExport(ctk.CTkFrame):
             ToastPopup(
                 self.app,
                 title="Nothing to Export",
-                message="All users are whitelisted. There is nothing to export.",
+                message="All users are whitelisted. There is nothing to export.",  # noqa: E501
                 toast_type="info",
                 duration_ms=3000,
             )
@@ -220,12 +228,12 @@ class ScreenExport(ctk.CTkFrame):
                 ToastPopup(
                     self.app,
                     title="CSV Exported!",
-                    message=f"Saved {self.final_count} usernames to:\n{os.path.basename(filepath)}",
+                    message=f"Saved {self.final_count} usernames to:\n{os.path.basename(filepath)}",  # noqa: E501
                     toast_type="success",
                     duration_ms=3000,
                 )
             except Exception as e:
-                # [SECURITY]: Do not leak exception details to the user to prevent path/system info exposure.
+                # [SECURITY]: Do not leak exception details to the user to prevent path/system info exposure.  # noqa: E501
                 print(f"Export error: {e}")
                 ToastPopup(
                     self.app,
@@ -263,4 +271,3 @@ class ScreenExport(ctk.CTkFrame):
         from src.screens.screen_upload import ScreenUpload
 
         self.app.switch_screen(ScreenUpload)
-
