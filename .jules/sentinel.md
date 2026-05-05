@@ -11,3 +11,8 @@
 **Vulnerability:** The application was exposing raw exception messages (`str(e)`) to the UI via `ToastPopup` upon export and parsing failures in `screen_export.py`, `screen_results.py`, and `screen_upload.py`.
 **Learning:** This could leak sensitive system information such as directory structures and local file paths (e.g., if a `FileNotFoundError` occurs during export, the full path is shown to the user).
 **Prevention:** Catch exceptions and log them using a secure backend mechanism (like `print` for a CLI or a logging framework), while displaying a generic, sanitized, user-friendly error message in the UI instead.
+
+## 2024-05-27 - Prevent File Type Bypass in Size Validation
+**Vulnerability:** The application was vulnerable to Denial of Service (DoS) by attempting to parse an infinite stream if a character device file like `/dev/zero` or `/dev/random` was provided as input. `os.path.getsize()` returns `0` for these special files, allowing them to bypass the file size checks, leading to memory exhaustion when read.
+**Learning:** Checking a file's size with `os.path.getsize()` is insufficient for security validation if the file type itself isn't verified. Special files on Unix-like systems can provide endless streams of data despite reporting a size of 0.
+**Prevention:** Before verifying file size or parsing data, explicitly ensure the target path points to a regular file using `os.path.isfile()`.
