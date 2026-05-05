@@ -173,12 +173,15 @@ class ActionButton(ctk.CTkButton):
             if key in kwargs:
                 style.pop(key)
 
+        # [UX] Explicitly set hand cursor for better hover feedback
+        # on interactive elements
         super().__init__(
             master,
             text=text,
             font=font or Fonts.BUTTON,
             height=height,
             corner_radius=Radius.MD,
+            cursor="hand2",
             **style,
             **kwargs,
         )
@@ -285,4 +288,3 @@ class ToastPopup(ctk.CTkToplevel):
             self.destroy()
         except Exception:
             pass
-
