@@ -7,3 +7,7 @@
 ## 2024-05-24 - [Pagination for Large UI Lists in CustomTkinter]
 **Learning:** CustomTkinter completely freezes the main UI thread when instantiating thousands of widgets (e.g. 5000 rows in a CTkScrollableFrame took 10+ seconds). Furthermore, packing and repacking these widgets during search causes severe lag.
 **Action:** Always implement pagination (e.g. rendering 100 items with a "Load More" button) rather than rendering full lists simultaneously. However, always ensure the underlying state elements (like ctk.BooleanVar) are pre-initialized for *all* items upfront so the state is preserved across pagination and filtering resets.
+
+## 2024-05-28 - Lazy Initialization of Tkinter Variables
+**Learning:** Eagerly instantiating thousands of variable wrappers (like `ctk.BooleanVar`) blocks the main thread in CustomTkinter/Tkinter applications. This was causing a severe bottleneck during the initialization of the list view for Instagram exports.
+**Action:** Always store core state in plain Python dictionaries and lazily instantiate Tk variables only when their corresponding UI widgets are explicitly rendered on screen (e.g. via pagination or virtualization).
