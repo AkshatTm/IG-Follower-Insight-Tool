@@ -33,6 +33,11 @@ def parse_instagram_json(filepath: str) -> Set[str]:
         json.JSONDecodeError: If the file is not valid JSON.
     """
     # Security: Prevent Memory Exhaustion (DoS)
+    # Check if the path is a regular file. Character devices like /dev/zero
+    # return a size of 0 but can produce infinite data, leading to memory exhaustion.
+    if not os.path.isfile(filepath):
+        raise ValueError(f"Invalid path: '{filepath}' is not a regular file.")
+
     # Check if the file is excessively large (limit to 100MB) before parsing.
     # Parsing very large JSON files into memory can cause the application to crash.
     max_size_bytes = 100 * 1024 * 1024
