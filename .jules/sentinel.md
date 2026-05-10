@@ -11,3 +11,7 @@
 **Vulnerability:** The application was exposing raw exception messages (`str(e)`) to the UI via `ToastPopup` upon export and parsing failures in `screen_export.py`, `screen_results.py`, and `screen_upload.py`.
 **Learning:** This could leak sensitive system information such as directory structures and local file paths (e.g., if a `FileNotFoundError` occurs during export, the full path is shown to the user).
 **Prevention:** Catch exceptions and log them using a secure backend mechanism (like `print` for a CLI or a logging framework), while displaying a generic, sanitized, user-friendly error message in the UI instead.
+## 2026-05-10 - DoS via Character Device in File Parsing
+**Vulnerability:** File parsing checked file size using `os.path.getsize()`, which returns 0 for character devices (like `/dev/zero`), bypassing the 100MB size check. When `json.load()` reads the file, it will exhaust memory and crash the application.
+**Learning:** `os.path.getsize()` is not sufficient to validate files. Character devices report a size of 0.
+**Prevention:** Always explicitly check that the path is a regular file using `os.path.isfile()` before validating its size or reading it.
