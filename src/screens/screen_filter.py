@@ -34,11 +34,14 @@ class ScreenFilter(ctk.CTkFrame):
         self.non_followers = list(app.data["non_followers"])  # Mutable copy
         self.whitelist = load_whitelist()
 
-        # Pre-initialize variables for all users to preserve state
-        self._vip_vars = {
-            u: ctk.BooleanVar(value=(u in self.whitelist))
+        # Pre-initialize raw boolean state for all users to prevent main thread freeze
+        self._vip_state = {
+            u: (u in self.whitelist)
             for u in self.non_followers
         }
+
+        # Track active Tkinter variable wrappers for rendered rows
+        self._vip_vars = {}
 
         # Track rendered row widgets: {username: frame_widget}
         self._row_widgets = {}
@@ -190,14 +193,21 @@ class ScreenFilter(ctk.CTkFrame):
 
     def _populate_rows(self):
         """Create a row for each non-follower with a VIP toggle switch."""
-        def create_toggle_handler(v):
+        def create_toggle_handler(v, username):
             def handler(event=None):
-                v.set(not v.get())
+                new_val = not v.get()
+                v.set(new_val)
+                self._vip_state[username] = new_val
                 self._update_counter()
             return handler
 
         for i in range(start_idx, end_idx):
             username = self._filtered_users[i]
+
+            # Lazily instantiate Tkinter variable
+            if username not in self._vip_vars:
+                self._vip_vars[username] = ctk.BooleanVar(value=self._vip_state[username])
+
             var = self._vip_vars[username]
 
             # Row frame
@@ -221,6 +231,10 @@ class ScreenFilter(ctk.CTkFrame):
             user_label.pack(side="left", fill="x", expand=True)
 
             # VIP switch
+            def on_switch_toggle(v=var, u=username):
+                self._vip_state[u] = v.get()
+                self._update_counter()
+
             switch = ctk.CTkSwitch(
                 row,
                 text="VIP",
@@ -232,12 +246,12 @@ class ScreenFilter(ctk.CTkFrame):
                 progress_color=Colors.SUCCESS,
                 button_color=Colors.TEXT_SECONDARY,
                 button_hover_color=Colors.ACCENT_LIGHT,
-                command=self._update_counter
+                command=on_switch_toggle
             )
             switch.pack(side="right")
 
             # Bind click events for row-level toggling
-            handler = create_toggle_handler(var)
+            handler = create_toggle_handler(var, username)
             row.bind("<Button-1>", handler)
             if hasattr(row, "_canvas"):
                 row._canvas.bind("<Button-1>", handler)
@@ -355,6 +369,7 @@ class ScreenFilter(ctk.CTkFrame):
         self._all_selected = not self._all_selected
 
         for username in self._filtered_users:
+            self._vip_state[username] = self._all_selected
             if username in self._vip_vars:
                 self._vip_vars[username].set(self._all_selected)
 
@@ -367,8 +382,8 @@ class ScreenFilter(ctk.CTkFrame):
 
     def _update_counter(self):
         """Update the VIP counter display."""
-        vip_count = sum(1 for var in self._vip_vars.values() if var.get())
-        total = len(self._vip_vars)
+        vip_count = sum(1 for is_vip in self._vip_state.values() if is_vip)
+        total = len(self._vip_state)
         to_unfollow = total - vip_count
 
         self.counter_label.configure(
@@ -381,8 +396,8 @@ class ScreenFilter(ctk.CTkFrame):
         """
         # Collect whitelisted usernames
         whitelisted = set()
-        for username, var in self._vip_vars.items():
-            if var.get():
+        for username, is_vip in self._vip_state.items():
+            if is_vip:
                 whitelisted.add(username)
 
         # Save to whitelist.json
