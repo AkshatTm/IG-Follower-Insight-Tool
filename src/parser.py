@@ -16,25 +16,30 @@ from typing import Set, List
 def parse_instagram_json(filepath: str) -> Set[str]:
     """
     Parse an Instagram JSON data export file and extract usernames.
-    
+
     Instagram has used multiple JSON structures over time:
-      Pattern A (current):  [ { "string_list_data": [{"value": "username"}] } ]
-      Pattern B (wrapped):  { "relationships_...": [ { "string_list_data": [...] } ] }
-      Pattern C (flat):     [ { "value": "username" } ]
-    
+      Pattern A: [ { "string_list_data": [{"value": "username"}] } ]
+      Pattern B: { "relationships_...": [ { "string_list_data": [...] } ] }
+      Pattern C: [ { "value": "username" } ]
+
     Args:
         filepath: Path to the JSON file (followers_1.json or following.json)
-    
+
     Returns:
         A set of unique username strings.
-    
+
     Raises:
         ValueError: If the JSON structure is unrecognized.
         json.JSONDecodeError: If the file is not valid JSON.
     """
     # Security: Prevent Memory Exhaustion (DoS)
-    # Check if the file is excessively large (limit to 100MB) before parsing.
-    # Parsing very large JSON files into memory can cause the application to crash.
+    # Check if the file is a regular file and not excessively large
+    # (limit to 100MB) before parsing. Parsing very large JSON files or
+    # character devices (like /dev/zero) into memory can cause the
+    # application to crash.
+    if not os.path.isfile(filepath):
+        raise ValueError("Invalid file. Must be a regular file.")
+
     max_size_bytes = 100 * 1024 * 1024
     if os.path.getsize(filepath) > max_size_bytes:
         raise ValueError(
@@ -85,12 +90,12 @@ def parse_instagram_json(filepath: str) -> Set[str]:
 def _extract_username(entry: dict) -> str | None:
     """
     Extract a username from a single entry using multiple patterns.
-    
+
     Tries (in order):
       1. entry['string_list_data'][0]['value']   — Most common pattern
       2. entry['value']                           — Flat pattern
       3. entry['username']                        — Direct pattern
-    
+
     Returns the username string or None if extraction fails.
     """
     if not isinstance(entry, dict):
@@ -130,14 +135,14 @@ def _extract_username(entry: dict) -> str | None:
 
 
 def calculate_non_followers(following_set: Set[str],
-                             followers_set: Set[str]) -> List[str]:
+                            followers_set: Set[str]) -> List[str]:
     """
     Calculate users you follow who don't follow you back.
-    
+
     Args:
         following_set: People you are following
         followers_set: People who follow you
-    
+
     Returns:
         Sorted list of usernames (following - followers).
     """
