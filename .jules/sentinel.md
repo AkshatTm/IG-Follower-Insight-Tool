@@ -11,3 +11,8 @@
 **Vulnerability:** The application was exposing raw exception messages (`str(e)`) to the UI via `ToastPopup` upon export and parsing failures in `screen_export.py`, `screen_results.py`, and `screen_upload.py`.
 **Learning:** This could leak sensitive system information such as directory structures and local file paths (e.g., if a `FileNotFoundError` occurs during export, the full path is shown to the user).
 **Prevention:** Catch exceptions and log them using a secure backend mechanism (like `print` for a CLI or a logging framework), while displaying a generic, sanitized, user-friendly error message in the UI instead.
+
+## 2024-05-11 - Prevent DoS via Character Devices
+**Vulnerability:** The application was vulnerable to a Denial of Service (DoS) attack where a user could provide a character device (e.g., `/dev/zero`) instead of a valid JSON file. `os.path.getsize('/dev/zero')` returns `0`, bypassing file size checks, leading to infinite reads that exhaust memory and crash the application.
+**Learning:** Checking `os.path.getsize()` is insufficient for validating file inputs, as special files can report sizes of 0 while containing infinite data streams.
+**Prevention:** Always verify that a path points to a regular file using `os.path.isfile()` before performing operations like size checks or reading contents into memory.
