@@ -5,3 +5,7 @@
 ## 2024-05-18 - Search/Filter Empty States
 **Learning:** During filtering operations (like the Smart Filter Dashboard), an empty result list without a message looks like a bug or incomplete load. Adding explicit empty states ("No users match your search.") provides necessary feedback and assures the user the app is functioning correctly.
 **Action:** When implementing real-time search or filterable lists, always include a hidden-by-default empty state label that is toggled on when the number of visible rows reaches zero.
+
+## 2024-05-18 - Hover Feedback on CustomTkinter Buttons
+**Learning:** CustomTkinter and standard Tkinter buttons lack built-in "pointer" cursor feedback on hover. This is jarring for modern desktop/web users who rely on cursor changes to understand click targets.
+**Action:** When creating reusable button components (like `ActionButton`), always ensure you explicitly set `cursor="hand2"` by default to improve affordance and accessibility.

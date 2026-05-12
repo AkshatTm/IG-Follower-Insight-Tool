@@ -173,6 +173,8 @@ class ActionButton(ctk.CTkButton):
             if key in kwargs:
                 style.pop(key)
 
+        kwargs.setdefault("cursor", "hand2")
+
         super().__init__(
             master,
             text=text,
