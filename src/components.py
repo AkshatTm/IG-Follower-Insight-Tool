@@ -173,15 +173,16 @@ class ActionButton(ctk.CTkButton):
             if key in kwargs:
                 style.pop(key)
 
-        # [UX] Explicitly set hand cursor for better hover feedback
-        # on interactive elements
+        # [UX] Default to a hand cursor for interactive elements,
+        # while still allowing callers to override it via kwargs.
+        kwargs.setdefault("cursor", "hand2")
+
         super().__init__(
             master,
             text=text,
             font=font or Fonts.BUTTON,
             height=height,
             corner_radius=Radius.MD,
-            cursor="hand2",
             **style,
             **kwargs,
         )
