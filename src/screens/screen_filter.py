@@ -170,7 +170,7 @@ class ScreenFilter(ctk.CTkFrame):
         self._populate_rows()
 
     def _populate_rows(self, clear=False):
-        """Create a row for each non-follower with a VIP toggle switch."""
+        """Create rows for the currently visible slice of filtered users with VIP toggle switches."""
         if clear:
             for widget in self._row_widgets.values():
                 widget.destroy()
