@@ -6,4 +6,8 @@
 **Action:** Do not use `winfo_ismapped()` to guard layout manager calls. Rely on debouncing to prevent excessive layout thrashing, and let Tkinter handle redundant `pack_forget()` operations safely.
 ## 2024-05-24 - [Pagination for Large UI Lists in CustomTkinter]
 **Learning:** CustomTkinter completely freezes the main UI thread when instantiating thousands of widgets (e.g. 5000 rows in a CTkScrollableFrame took 10+ seconds). Furthermore, packing and repacking these widgets during search causes severe lag.
-**Action:** Always implement pagination (e.g. rendering 100 items with a "Load More" button) rather than rendering full lists simultaneously. However, always ensure the underlying state elements (like ctk.BooleanVar) are pre-initialized for *all* items upfront so the state is preserved across pagination and filtering resets.
+**Action:** Always implement pagination (e.g. rendering 100 items with a "Load More" button) rather than rendering full lists simultaneously. To preserve state across pagination and filtering resets, initialize the underlying item state for *all* items upfront in plain Python data structures. **Superseded clarification (see 2024-05-28): do not pre-initialize `ctk.BooleanVar` or other Tk variable wrappers for every item.**
+
+## 2024-05-28 - Lazy Initialization of Tkinter Variables
+**Learning:** Eagerly instantiating thousands of variable wrappers (like `ctk.BooleanVar`) blocks the main thread in CustomTkinter/Tkinter applications. This was causing a severe bottleneck during the initialization of the list view for Instagram exports.
+**Action:** This is the current recommendation: store core state in plain Python dictionaries for all items, and lazily instantiate Tk variables only when their corresponding UI widgets are explicitly rendered on screen (e.g. via pagination or virtualization).

@@ -173,6 +173,8 @@ class ActionButton(ctk.CTkButton):
             if key in kwargs:
                 style.pop(key)
 
+        # [UX] Default to a hand cursor for interactive elements,
+        # while still allowing callers to override it via kwargs.
         kwargs.setdefault("cursor", "hand2")
 
         super().__init__(
@@ -287,4 +289,3 @@ class ToastPopup(ctk.CTkToplevel):
             self.destroy()
         except Exception:
             pass
-

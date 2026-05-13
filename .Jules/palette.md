@@ -6,6 +6,12 @@
 **Learning:** During filtering operations (like the Smart Filter Dashboard), an empty result list without a message looks like a bug or incomplete load. Adding explicit empty states ("No users match your search.") provides necessary feedback and assures the user the app is functioning correctly.
 **Action:** When implementing real-time search or filterable lists, always include a hidden-by-default empty state label that is toggled on when the number of visible rows reaches zero.
 
-## 2024-05-18 - Hover Feedback on CustomTkinter Buttons
-**Learning:** CustomTkinter and standard Tkinter buttons lack built-in "pointer" cursor feedback on hover. This is jarring for modern desktop/web users who rely on cursor changes to understand click targets.
-**Action:** When creating reusable button components (like `ActionButton`), always ensure you explicitly set `cursor="hand2"` by default to improve affordance and accessibility.
+## 2026-05-06 - Hover Cursor on Buttons
+**Learning:** In CustomTkinter, buttons do not automatically provide a pointer/hand cursor on hover, which reduces discoverability of interactive elements.
+**Action:** When creating reusable interactive elements like `ActionButton`, explicitly set `cursor="hand2"` to provide standard visual feedback and improve UX.
+## 2024-05-18 - Hover Feedback on Interactive Components
+**Learning:** In CustomTkinter, interactive components like buttons do not display a pointer cursor by default on hover, which reduces discoverability of clickability and makes the interface feel less responsive.
+**Action:** Always explicitly set `cursor="hand2"` on reusable interactive components (like buttons and row clicks) to provide immediate visual hover feedback.
+## 2024-05-18 - Hover Feedback on Buttons
+**Learning:** In CustomTkinter, buttons do not automatically change the cursor to a pointer (hand) on hover. This leads to a lack of visual feedback for interactivity, which is a standard expectation in modern UI/UX design.
+**Action:** Always explicitly set `cursor="hand2"` on reusable interactive components (like `ActionButton` subclassing `ctk.CTkButton`) to ensure users receive clear visual indication that the element is clickable.
