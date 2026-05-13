@@ -27,13 +27,13 @@ def _write_empty_whitelist(filepath: str):
 def load_whitelist(filepath: str = WHITELIST_FILE) -> Set[str]:
     """
     Load the whitelist from a JSON file.
-    
+
     Returns an empty set if the file doesn't exist yet
     (first-time run scenario).
-    
+
     Args:
         filepath: Path to the whitelist JSON file.
-    
+
     Returns:
         Set of whitelisted usernames.
     """
@@ -62,7 +62,7 @@ def load_whitelist(filepath: str = WHITELIST_FILE) -> Set[str]:
 def save_whitelist(usernames: Set[str], filepath: str = WHITELIST_FILE):
     """
     Save the whitelist to a JSON file.
-    
+
     Args:
         usernames: Set of whitelisted usernames.
         filepath: Path to write the whitelist JSON file.

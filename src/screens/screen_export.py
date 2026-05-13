@@ -263,4 +263,3 @@ class ScreenExport(ctk.CTkFrame):
         from src.screens.screen_upload import ScreenUpload
 
         self.app.switch_screen(ScreenUpload)
-

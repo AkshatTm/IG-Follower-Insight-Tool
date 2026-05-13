@@ -237,7 +237,8 @@ class ScreenFilter(ctk.CTkFrame):
                 text_color=Colors.TEXT_MUTED,
                 progress_color=Colors.SUCCESS,
                 button_color=Colors.TEXT_SECONDARY,
-                button_hover_color=Colors.ACCENT_LIGHT
+                button_hover_color=Colors.ACCENT_LIGHT,
+                cursor="hand2"
             )
             switch.pack(side="right")
 
