@@ -34,11 +34,14 @@ class ScreenFilter(ctk.CTkFrame):
         self.non_followers = list(app.data["non_followers"])  # Mutable copy
         self.whitelist = load_whitelist()
 
-        # Pre-initialize variables for all users to preserve state
-        self._vip_vars = {
-            u: ctk.BooleanVar(value=(u in self.whitelist))
+        # Fast, plain Python dict for storing VIP state
+        self._vip_state = {
+            u: (u in self.whitelist)
             for u in self.non_followers
         }
+
+        # Lazy instantiation of Tkinter variables
+        self._vip_vars = {}
 
         # Track rendered row widgets: {username: frame_widget}
         self._row_widgets = {}
@@ -167,37 +170,40 @@ class ScreenFilter(ctk.CTkFrame):
         self._populate_rows()
 
     def _populate_rows(self, clear=False):
-        """Create a row for each non-follower with a VIP toggle switch. Uses pagination."""
+        """Create rows for the currently visible slice of filtered users with VIP toggle switches."""
         if clear:
             for widget in self._row_widgets.values():
                 widget.destroy()
             self._row_widgets.clear()
 
-        if self._load_more_btn is not None and self._load_more_btn.winfo_exists():
+        if getattr(self, '_load_more_btn', None) is not None and self._load_more_btn.winfo_exists():
             self._load_more_btn.destroy()
 
         start_idx = len(self._row_widgets)
         end_idx = min(self._visible_limit, len(self._filtered_users))
 
-        # Empty state label (hidden by default)
-        self.empty_state_label = ctk.CTkLabel(
-            self.scroll_frame,
-            text="",
-            font=Fonts.BODY,
-            text_color=Colors.TEXT_MUTED
-        )
-        self._perform_search()
-
-    def _populate_rows(self):
-        """Create a row for each non-follower with a VIP toggle switch."""
-        def create_toggle_handler(v):
+        def create_toggle_handler(u, v):
             def handler(event=None):
-                v.set(not v.get())
+                # When invoked by CTkSwitch command, the variable is already toggled.
+                # When invoked by row click (event is not None), we must toggle it manually.
+                if event is not None:
+                    new_state = not v.get()
+                    v.set(new_state)
+                else:
+                    new_state = v.get()
+                self._vip_state[u] = new_state
                 self._update_counter()
             return handler
 
         for i in range(start_idx, end_idx):
             username = self._filtered_users[i]
+
+            # Lazily instantiate Tkinter variable
+            if username not in self._vip_vars:
+                self._vip_vars[username] = ctk.BooleanVar(value=self._vip_state.get(username, False))
+            else:
+                self._vip_vars[username].set(self._vip_state.get(username, False))
+
             var = self._vip_vars[username]
 
             # Row frame
@@ -231,13 +237,15 @@ class ScreenFilter(ctk.CTkFrame):
                 text_color=Colors.TEXT_MUTED,
                 progress_color=Colors.SUCCESS,
                 button_color=Colors.TEXT_SECONDARY,
-                button_hover_color=Colors.ACCENT_LIGHT,
-                command=self._update_counter
+                button_hover_color=Colors.ACCENT_LIGHT
             )
             switch.pack(side="right")
 
+            # Update state when switch is clicked directly
+            switch.configure(command=create_toggle_handler(username, var))
+
             # Bind click events for row-level toggling
-            handler = create_toggle_handler(var)
+            handler = create_toggle_handler(username, var)
             row.bind("<Button-1>", handler)
             if hasattr(row, "_canvas"):
                 row._canvas.bind("<Button-1>", handler)
@@ -326,16 +334,13 @@ class ScreenFilter(ctk.CTkFrame):
         self._visible_limit = self.PAGE_SIZE
         self._populate_rows(clear=True)
 
+        visible_count = len(self._filtered_users)
+
         if visible_count == 0:
             if len(self.non_followers) == 0:
                 self.empty_state_label.configure(text="No non-followers to filter! 🎉")
             else:
                 self.empty_state_label.configure(text="No users match your search.")
-            self.empty_state_label.pack(pady=40)
-        else:
-            self.empty_state_label.pack_forget()
-
-        if visible_count == 0:
             self.empty_state_label.pack(pady=Spacing.XL)
         else:
             self.empty_state_label.pack_forget()
@@ -343,7 +348,7 @@ class ScreenFilter(ctk.CTkFrame):
         # Update subtitle with filtered count
         if query:
             self.subtitle.configure(
-                text=f"Showing {len(self._filtered_users)} of {len(self.non_followers)} users (filtered)"
+                text=f"Showing {visible_count} of {len(self.non_followers)} users (filtered)"
             )
         else:
             self.subtitle.configure(
@@ -355,6 +360,9 @@ class ScreenFilter(ctk.CTkFrame):
         self._all_selected = not self._all_selected
 
         for username in self._filtered_users:
+            # Update source of truth
+            self._vip_state[username] = self._all_selected
+            # Update UI if widget exists
             if username in self._vip_vars:
                 self._vip_vars[username].set(self._all_selected)
 
@@ -367,8 +375,8 @@ class ScreenFilter(ctk.CTkFrame):
 
     def _update_counter(self):
         """Update the VIP counter display."""
-        vip_count = sum(1 for var in self._vip_vars.values() if var.get())
-        total = len(self._vip_vars)
+        vip_count = sum(1 for state in self._vip_state.values() if state)
+        total = len(self._vip_state)
         to_unfollow = total - vip_count
 
         self.counter_label.configure(
@@ -381,8 +389,8 @@ class ScreenFilter(ctk.CTkFrame):
         """
         # Collect whitelisted usernames
         whitelisted = set()
-        for username, var in self._vip_vars.items():
-            if var.get():
+        for username, is_vip in self._vip_state.items():
+            if is_vip:
                 whitelisted.add(username)
 
         # Save to whitelist.json
