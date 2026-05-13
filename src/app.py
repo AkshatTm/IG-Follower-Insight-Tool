@@ -78,4 +78,3 @@ class App(ctk.CTk):
             "non_followers": [],
             "whitelist": set(),
         }
-

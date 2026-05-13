@@ -276,4 +276,3 @@ class ScreenUpload(ctk.CTkFrame):
         if len(short) > max_len:
             return f".../{filename}"
         return short
-
