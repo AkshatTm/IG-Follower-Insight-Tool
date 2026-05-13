@@ -183,6 +183,7 @@ class ActionButton(ctk.CTkButton):
             font=font or Fonts.BUTTON,
             height=height,
             corner_radius=Radius.MD,
+            cursor="hand2",
             **style,
             **kwargs,
         )

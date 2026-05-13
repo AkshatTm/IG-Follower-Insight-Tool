@@ -9,3 +9,6 @@
 ## 2024-05-18 - Hover Feedback on Interactive Components
 **Learning:** In CustomTkinter, interactive components like buttons do not display a pointer cursor by default on hover, which reduces discoverability of clickability and makes the interface feel less responsive.
 **Action:** Always explicitly set `cursor="hand2"` on reusable interactive components (like buttons and row clicks) to provide immediate visual hover feedback.
+## 2024-05-18 - Hover Feedback on Buttons
+**Learning:** In CustomTkinter, buttons do not automatically change the cursor to a pointer (hand) on hover. This leads to a lack of visual feedback for interactivity, which is a standard expectation in modern UI/UX design.
+**Action:** Always explicitly set `cursor="hand2"` on reusable interactive components (like `ActionButton` subclassing `ctk.CTkButton`) to ensure users receive clear visual indication that the element is clickable.
