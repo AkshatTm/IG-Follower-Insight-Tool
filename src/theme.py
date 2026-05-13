@@ -80,6 +80,6 @@ class Radius:
 
 
 WINDOW_WIDTH = 850
-WINDOW_HEIGHT = 650
+WINDOW_HEIGHT = 720
 APP_TITLE = "Instagram Red Flags"
 

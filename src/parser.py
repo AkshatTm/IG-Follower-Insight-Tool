@@ -37,32 +37,44 @@ def parse_instagram_json(filepath: str) -> Set[str]:
     # Check if the path is a regular file. Character devices like /dev/zero
     # return a size of 0 but can produce infinite data, leading to memory exhaustion.
     if not os.path.isfile(filepath):
-        raise ValueError(f"Invalid path: '{filepath}' is not a regular file.")
-
-    # Check if the file is excessively large (limit to 100MB) before parsing.
-    # Parsing very large JSON files into memory can cause the app to crash.
-    # Also verify it's a regular file, as os.path.getsize() returns 0
-    # for character devices.
-    if not os.path.isfile(filepath):
-        raise ValueError(f"'{filepath}' is not a regular file.")
-    max_size_bytes = 100 * 1024 * 1024
-
-    # Check if the input is a regular file. Character devices like /dev/zero
-    # bypass the size limit (getsize returns 0) and lead to infinite reading.
-    if not os.path.isfile(filepath):
         raise ValueError(
             f"Invalid file path '{filepath}'. "
             "Only regular files are allowed to prevent DoS attacks."
         )
 
+    # Limit to 100MB before parsing — very large JSON files can crash the app.
+    max_size_bytes = 100 * 1024 * 1024
     if os.path.getsize(filepath) > max_size_bytes:
         raise ValueError(
             "File too large. Maximum allowed size is 100MB to "
             "prevent memory exhaustion."
         )
 
-    with open(filepath, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    # Instagram exports files in latin-1 (ISO-8859-1), not UTF-8.
+    # Try UTF-8 first (covers newer exports), then fall back to latin-1.
+    raw_text = None
+    for encoding in ("utf-8", "latin-1", "utf-8-sig"):
+        try:
+            with open(filepath, "r", encoding=encoding) as f:
+                raw_text = f.read()
+            break
+        except UnicodeDecodeError:
+            continue
+
+    if raw_text is None:
+        raise ValueError(
+            f"Could not decode '{os.path.basename(filepath)}'. "
+            "The file encoding is not supported."
+        )
+
+    try:
+        data = json.loads(raw_text)
+    except json.JSONDecodeError as exc:
+        raise json.JSONDecodeError(
+            f"'{os.path.basename(filepath)}' is not valid JSON: {exc.msg}",
+            exc.doc,
+            exc.pos,
+        ) from exc
 
     usernames = set()
 
@@ -94,8 +106,9 @@ def parse_instagram_json(filepath: str) -> Set[str]:
 
     if not usernames:
         raise ValueError(
-            f"No usernames found in '{filepath}'. "
-            "The file might be empty or have an unexpected format."
+            f"No usernames found in '{os.path.basename(filepath)}'. "
+            "The file might be empty or have an unexpected format. "
+            "Make sure you selected the correct Instagram export files."
         )
 
     return usernames
@@ -107,8 +120,9 @@ def _extract_username(entry: dict) -> str | None:
     
     Tries (in order):
       1. entry['string_list_data'][0]['value']   — Most common pattern
-      2. entry['value']                           — Flat pattern
-      3. entry['username']                        — Direct pattern
+      2. entry['title']                           — Newer Instagram export (following.json)
+      3. entry['value']                           — Flat pattern
+      4. entry['username']                        — Direct pattern
     
     Returns the username string or None if extraction fails.
     """
@@ -130,6 +144,18 @@ def _extract_username(entry: dict) -> str | None:
                 if clean_value:
                     return clean_value
     except (AttributeError, IndexError, TypeError):
+        pass
+
+    # Pattern E: Top-level "title" key — newer Instagram following.json exports
+    # store the username in entry["title"] when string_list_data has no "value".
+    try:
+        value = entry.get("title", "")
+        if isinstance(value, str) and value.strip():
+            # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)
+            clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])
+            if clean_value:
+                return clean_value
+    except (AttributeError, TypeError):
         pass
 
     # Pattern C: Flat {"value": "username"}

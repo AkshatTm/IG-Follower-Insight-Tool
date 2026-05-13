@@ -236,8 +236,8 @@ class ScreenResults(ctk.CTkFrame):
                     toast_type="success",
                     duration_ms=2500
                 )
-                # Quit after popup closes
-                self.app.after(3000, self.app.quit)
+                # Destroy the window cleanly after the popup timer finishes
+                self.app.after(3000, self.app.destroy)
 
             except Exception as e:
                 # [SECURITY]: Do not leak exception details to the user to prevent path/system info exposure.
