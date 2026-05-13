@@ -10,6 +10,7 @@ try multiple known patterns to extract usernames.
 
 import json
 import os
+import re
 from typing import Set, List
 
 
@@ -115,7 +116,10 @@ def _extract_username(entry: dict) -> str | None:
         if isinstance(sld, list) and len(sld) > 0:
             value = sld[0].get("value", "")
             if isinstance(value, str) and value.strip():
-                return value.strip()[:max_len]
+                # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)
+                clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])
+                if clean_value:
+                    return clean_value
     except (AttributeError, IndexError, TypeError):
         pass
 
@@ -123,7 +127,10 @@ def _extract_username(entry: dict) -> str | None:
     try:
         value = entry.get("value", "")
         if isinstance(value, str) and value.strip():
-            return value.strip()[:max_len]
+            # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)
+            clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])
+            if clean_value:
+                return clean_value
     except (AttributeError, TypeError):
         pass
 
@@ -131,7 +138,10 @@ def _extract_username(entry: dict) -> str | None:
     try:
         value = entry.get("username", "")
         if isinstance(value, str) and value.strip():
-            return value.strip()[:max_len]
+            # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)
+            clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])
+            if clean_value:
+                return clean_value
     except (AttributeError, TypeError):
         pass
 
