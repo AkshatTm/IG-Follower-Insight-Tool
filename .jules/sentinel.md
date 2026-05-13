@@ -11,6 +11,10 @@
 **Vulnerability:** The application was exposing raw exception messages (`str(e)`) to the UI via `ToastPopup` upon export and parsing failures in `screen_export.py`, `screen_results.py`, and `screen_upload.py`.
 **Learning:** This could leak sensitive system information such as directory structures and local file paths (e.g., if a `FileNotFoundError` occurs during export, the full path is shown to the user).
 **Prevention:** Catch exceptions and log them using a secure backend mechanism (like `print` for a CLI or a logging framework), while displaying a generic, sanitized, user-friendly error message in the UI instead.
+## 2024-05-18 - File Size Bypass via Character Devices
+**Vulnerability:** The application used `os.path.getsize(filepath)` to check if a file was too large (to prevent memory exhaustion DoS) before parsing it as JSON. However, special files like character devices (e.g., `/dev/zero`) return a size of `0` from `os.path.getsize()`, effectively bypassing the size check, but when read, they produce an infinite stream of data, leading to a Denial of Service.
+**Learning:** `os.path.getsize()` is insufficient for preventing DoS attacks when reading files. It does not account for infinite streams produced by non-regular files like character devices or named pipes which report a size of 0.
+**Prevention:** Always explicitly check if a given path is a regular file using `os.path.isfile(filepath)` before reading its contents, especially before attempting to load the entire contents into memory.
 
 ## 2026-05-04 - Fix Memory Exhaustion Bypass via Character Devices
 **Vulnerability:** The memory exhaustion check in `src/parser.py` relied on `os.path.getsize()` to prevent DoS attacks via excessively large JSON files. However, `os.path.getsize()` returns `0` for character devices like `/dev/zero`, allowing the check to be bypassed and leading to infinite memory consumption when reading the file.
