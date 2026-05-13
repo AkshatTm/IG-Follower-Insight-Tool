@@ -12,6 +12,10 @@
 **Learning:** This could leak sensitive system information such as directory structures and local file paths (e.g., if a `FileNotFoundError` occurs during export, the full path is shown to the user).
 **Prevention:** Catch exceptions and log them using a secure backend mechanism (like `print` for a CLI or a logging framework), while displaying a generic, sanitized, user-friendly error message in the UI instead.
 
+## 2026-05-04 - Fix Memory Exhaustion Bypass via Character Devices
+**Vulnerability:** The memory exhaustion check in `src/parser.py` relied on `os.path.getsize()` to prevent DoS attacks via excessively large JSON files. However, `os.path.getsize()` returns `0` for character devices like `/dev/zero`, allowing the check to be bypassed and leading to infinite memory consumption when reading the file.
+**Learning:** Character devices have a size of 0 but can produce infinite streams of data. Relying solely on file size checks without verifying file types opens the door to DoS attacks on local applications.
+**Prevention:** Always verify that a file path points to a regular file using `os.path.isfile()` before performing operations like size checks or reading data into memory.
 ## 2024-05-03 - Prevent DoS via Infinite Stream Devices in Parser
 **Vulnerability:** The application used `os.path.getsize()` to check file sizes prior to parsing JSON files as a DoS mitigation. However, character device files (like `/dev/zero` or `/dev/urandom`) return a size of `0` in Python, bypassing the size check limit. Parsing such files via `json.load()` causes an infinite read operation that quickly exhausts system memory, leading to a Denial of Service.
 **Learning:** `os.path.getsize()` cannot be fully trusted as the sole DoS mitigation against massive files if the input could be a device stream instead of a regular file on disk.
