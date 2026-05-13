@@ -226,7 +226,7 @@ class ScreenResults(ctk.CTkFrame):
             try:
                 with open(filepath, "w", encoding="utf-8") as f:
                     for username in self.non_followers:
-                        # Prevent CSV/Formula Injection if the text file is imported
+                        # Prevent CSV/Formula Injection if the text file is imported  # noqa: E501
                         safe_username = username
                         if safe_username.startswith(("=", "+", "-", "@")):
                             safe_username = f"'{safe_username}"
@@ -236,7 +236,7 @@ class ScreenResults(ctk.CTkFrame):
                 ToastPopup(
                     self.app,
                     title="Exported Successfully!",
-                    message=f"Saved {self.non_followers_count} usernames to:\n{os.path.basename(filepath)}",  # noqa: E501
+                    message=(f"Saved {self.non_followers_count} usernames to:\n" f"{os.path.basename(filepath)}"),  # noqa: E501
                     toast_type="success",
                     duration_ms=2500)
                 # Quit after popup closes

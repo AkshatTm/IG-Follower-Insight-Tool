@@ -35,7 +35,8 @@ def parse_instagram_json(filepath: str) -> Set[str]:
     """
     # Security: Prevent Memory Exhaustion (DoS)
     # Check if the file is excessively large (limit to 100MB) before parsing.
-    # Parsing very large JSON files into memory can cause the app to crash.
+    # Parsing very large JSON files into memory can cause the application to
+    # crash.
     max_size_bytes = 100 * 1024 * 1024
 
     # Check if the input is a regular file. Character devices like /dev/zero
@@ -116,8 +117,8 @@ def _extract_username(entry: dict) -> str | None:
         if isinstance(sld, list) and len(sld) > 0:
             value = sld[0].get("value", "")
             if isinstance(value, str) and value.strip():
-                # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)
-                clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])
+                # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)  # noqa: E501
+                clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])  # noqa: E501
                 if clean_value:
                     return clean_value
     except (AttributeError, IndexError, TypeError):
@@ -127,8 +128,8 @@ def _extract_username(entry: dict) -> str | None:
     try:
         value = entry.get("value", "")
         if isinstance(value, str) and value.strip():
-            # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)
-            clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])
+            # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)  # noqa: E501
+            clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])  # noqa: E501
             if clean_value:
                 return clean_value
     except (AttributeError, TypeError):
@@ -138,8 +139,8 @@ def _extract_username(entry: dict) -> str | None:
     try:
         value = entry.get("username", "")
         if isinstance(value, str) and value.strip():
-            # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)
-            clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])
+            # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)  # noqa: E501
+            clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])  # noqa: E501
             if clean_value:
                 return clean_value
     except (AttributeError, TypeError):
