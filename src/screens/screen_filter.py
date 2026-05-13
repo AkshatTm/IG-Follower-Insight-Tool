@@ -188,6 +188,7 @@ class ScreenFilter(ctk.CTkFrame):
 
         if self._load_more_btn is not None and self._load_more_btn.winfo_exists():  # noqa: E501
             self._load_more_btn.destroy()
+            self._load_more_btn = None
 
         start_idx = len(self._row_widgets)
         end_idx = min(self._visible_limit, len(self._filtered_users))
