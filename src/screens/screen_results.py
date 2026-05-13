@@ -226,7 +226,11 @@ class ScreenResults(ctk.CTkFrame):
             try:
                 with open(filepath, "w", encoding="utf-8") as f:
                     for username in self.non_followers:
-                        f.write(f"{username}\n")
+                        # Prevent CSV/Formula Injection if the text file is imported
+                        safe_username = username
+                        if safe_username.startswith(("=", "+", "-", "@")):
+                            safe_username = f"'{safe_username}"
+                        f.write(f"{safe_username}\n")
 
                 # Success popup, then quit
                 ToastPopup(
