@@ -34,11 +34,13 @@ class ScreenFilter(ctk.CTkFrame):
         self.non_followers = list(app.data["non_followers"])  # Mutable copy
         self.whitelist = load_whitelist()
 
-        # Pre-initialize variables for all users to preserve state
-        self._vip_vars = {
-            u: ctk.BooleanVar(value=(u in self.whitelist))
+        # Source of truth for VIP state (plain dict, lazy eval for BooleanVars)
+        self._vip_state = {
+            u: (u in self.whitelist)
             for u in self.non_followers
         }
+        # Keep track of active BooleanVars
+        self._vip_vars = {}
 
         # Track rendered row widgets: {username: frame_widget}
         self._row_widgets = {}
@@ -64,7 +66,11 @@ class ScreenFilter(ctk.CTkFrame):
     def _build_ui(self):
         """Assemble all UI elements for Screen 3."""
         container = ctk.CTkFrame(self, fg_color="transparent")
-        container.pack(fill="both", expand=True, padx=Spacing.SCREEN_PAD, pady=Spacing.SCREEN_PAD)
+        container.pack(
+            fill="both",
+            expand=True,
+            padx=Spacing.SCREEN_PAD,
+            pady=Spacing.SCREEN_PAD)
 
         # ── Header ────────────────────────────────────────
         self._build_header(container)
@@ -93,7 +99,7 @@ class ScreenFilter(ctk.CTkFrame):
 
         self.subtitle = ctk.CTkLabel(
             header,
-            text=f"Showing {len(self.non_followers)} users who don't follow you back",
+            text=f"Showing {len(self.non_followers)} users who don't follow you back",  # noqa: E501
             font=Fonts.BODY,
             text_color=Colors.TEXT_SECONDARY
         )
@@ -126,7 +132,9 @@ class ScreenFilter(ctk.CTkFrame):
 
         # Column headers
         header_frame = ctk.CTkFrame(list_card, fg_color="transparent")
-        header_frame.pack(fill="x", padx=Spacing.CARD_PAD_X, pady=(Spacing.MD, Spacing.XS))
+        header_frame.pack(
+            fill="x", padx=Spacing.CARD_PAD_X, pady=(
+                Spacing.MD, Spacing.XS))
 
         ctk.CTkLabel(
             header_frame,
@@ -153,7 +161,11 @@ class ScreenFilter(ctk.CTkFrame):
             scrollbar_button_color=Colors.BG_HOVER,
             scrollbar_button_hover_color=Colors.ACCENT_PRIMARY
         )
-        self.scroll_frame.pack(fill="both", expand=True, padx=Spacing.SM, pady=Spacing.SM)
+        self.scroll_frame.pack(
+            fill="both",
+            expand=True,
+            padx=Spacing.SM,
+            pady=Spacing.SM)
 
         # Empty state label
         self.empty_state_label = ctk.CTkLabel(
@@ -167,37 +179,35 @@ class ScreenFilter(ctk.CTkFrame):
         self._populate_rows()
 
     def _populate_rows(self, clear=False):
-        """Create a row for each non-follower with a VIP toggle switch. Uses pagination."""
+        """Create a row for each non-follower with a VIP toggle switch. Uses pagination."""  # noqa: E501
         if clear:
             for widget in self._row_widgets.values():
                 widget.destroy()
             self._row_widgets.clear()
+            self._vip_vars.clear()
 
-        if self._load_more_btn is not None and self._load_more_btn.winfo_exists():
+        if self._load_more_btn is not None and self._load_more_btn.winfo_exists():  # noqa: E501
             self._load_more_btn.destroy()
+            self._load_more_btn = None
 
         start_idx = len(self._row_widgets)
         end_idx = min(self._visible_limit, len(self._filtered_users))
 
-        # Empty state label (hidden by default)
-        self.empty_state_label = ctk.CTkLabel(
-            self.scroll_frame,
-            text="",
-            font=Fonts.BODY,
-            text_color=Colors.TEXT_MUTED
-        )
-        self._perform_search()
-
-    def _populate_rows(self):
-        """Create a row for each non-follower with a VIP toggle switch."""
-        def create_toggle_handler(v):
+        def create_toggle_handler(username, var):
             def handler(event=None):
-                v.set(not v.get())
+                new_val = not var.get()
+                var.set(new_val)
+                self._vip_state[username] = new_val
                 self._update_counter()
             return handler
 
         for i in range(start_idx, end_idx):
             username = self._filtered_users[i]
+
+            # Lazily instantiate the BooleanVar for this row
+            if username not in self._vip_vars:
+                self._vip_vars[username] = ctk.BooleanVar(
+                    value=self._vip_state[username])
             var = self._vip_vars[username]
 
             # Row frame
@@ -232,12 +242,15 @@ class ScreenFilter(ctk.CTkFrame):
                 progress_color=Colors.SUCCESS,
                 button_color=Colors.TEXT_SECONDARY,
                 button_hover_color=Colors.ACCENT_LIGHT,
-                command=self._update_counter
+                command=lambda u=username, v=var: (
+                    self._vip_state.update({u: v.get()}),
+                    self._update_counter()
+                )
             )
             switch.pack(side="right")
 
             # Bind click events for row-level toggling
-            handler = create_toggle_handler(var)
+            handler = create_toggle_handler(username, var)
             row.bind("<Button-1>", handler)
             if hasattr(row, "_canvas"):
                 row._canvas.bind("<Button-1>", handler)
@@ -326,11 +339,15 @@ class ScreenFilter(ctk.CTkFrame):
         self._visible_limit = self.PAGE_SIZE
         self._populate_rows(clear=True)
 
+        visible_count = len(self._filtered_users)
+
         if visible_count == 0:
             if len(self.non_followers) == 0:
-                self.empty_state_label.configure(text="No non-followers to filter! 🎉")
+                self.empty_state_label.configure(
+                    text="No non-followers to filter! 🎉")
             else:
-                self.empty_state_label.configure(text="No users match your search.")
+                self.empty_state_label.configure(
+                    text="No users match your search.")
             self.empty_state_label.pack(pady=40)
         else:
             self.empty_state_label.pack_forget()
@@ -343,11 +360,11 @@ class ScreenFilter(ctk.CTkFrame):
         # Update subtitle with filtered count
         if query:
             self.subtitle.configure(
-                text=f"Showing {len(self._filtered_users)} of {len(self.non_followers)} users (filtered)"
+                text=f"Showing {len(self._filtered_users)} of {len(self.non_followers)} users (filtered)"  # noqa: E501
             )
         else:
             self.subtitle.configure(
-                text=f"Showing {len(self.non_followers)} users who don't follow you back"
+                text=f"Showing {len(self.non_followers)} users who don't follow you back"  # noqa: E501
             )
 
     def _toggle_select_all(self):
@@ -355,6 +372,7 @@ class ScreenFilter(ctk.CTkFrame):
         self._all_selected = not self._all_selected
 
         for username in self._filtered_users:
+            self._vip_state[username] = self._all_selected
             if username in self._vip_vars:
                 self._vip_vars[username].set(self._all_selected)
 
@@ -367,8 +385,8 @@ class ScreenFilter(ctk.CTkFrame):
 
     def _update_counter(self):
         """Update the VIP counter display."""
-        vip_count = sum(1 for var in self._vip_vars.values() if var.get())
-        total = len(self._vip_vars)
+        vip_count = sum(1 for is_vip in self._vip_state.values() if is_vip)
+        total = len(self._vip_state)
         to_unfollow = total - vip_count
 
         self.counter_label.configure(
@@ -381,8 +399,8 @@ class ScreenFilter(ctk.CTkFrame):
         """
         # Collect whitelisted usernames
         whitelisted = set()
-        for username, var in self._vip_vars.items():
-            if var.get():
+        for username, is_vip in self._vip_state.items():
+            if is_vip:
                 whitelisted.add(username)
 
         # Save to whitelist.json

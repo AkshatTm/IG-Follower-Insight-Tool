@@ -46,7 +46,11 @@ class ScreenResults(ctk.CTkFrame):
     def _build_ui(self):
         """Assemble all UI elements for Screen 2."""
         container = ctk.CTkFrame(self, fg_color="transparent")
-        container.pack(fill="both", expand=True, padx=Spacing.SCREEN_PAD, pady=Spacing.SCREEN_PAD)
+        container.pack(
+            fill="both",
+            expand=True,
+            padx=Spacing.SCREEN_PAD,
+            pady=Spacing.SCREEN_PAD)
 
         # ── Header ────────────────────────────────────────
         self._build_header(container)
@@ -232,15 +236,14 @@ class ScreenResults(ctk.CTkFrame):
                 ToastPopup(
                     self.app,
                     title="Exported Successfully!",
-                    message=f"Saved {self.non_followers_count} usernames to:\n{os.path.basename(filepath)}",
+                    message=f"Saved {self.non_followers_count} usernames to:\n{os.path.basename(filepath)}",  # noqa: E501
                     toast_type="success",
-                    duration_ms=2500
-                )
+                    duration_ms=2500)
                 # Quit after popup closes
                 self.app.after(3000, self.app.quit)
 
             except Exception as e:
-                # [SECURITY]: Do not leak exception details to the user to prevent path/system info exposure.
+                # [SECURITY]: Do not leak exception details to the user to prevent path/system info exposure.  # noqa: E501
                 print(f"Export error: {e}")
                 ToastPopup(
                     self.app,

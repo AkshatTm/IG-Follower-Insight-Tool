@@ -14,7 +14,7 @@ from src.theme import Colors, Fonts, Spacing, Radius
 from src.components import GlassCard, StatusLabel, ActionButton, SubtitleLabel
 
 
-INSTAGRAM_DYI_URL = "https://accountscenter.instagram.com/info_and_permissions/dyi/"
+INSTAGRAM_DYI_URL = "https://accountscenter.instagram.com/info_and_permissions/dyi/"  # noqa: E501
 
 
 class ScreenUpload(ctk.CTkFrame):
@@ -101,7 +101,7 @@ class ScreenUpload(ctk.CTkFrame):
             )
             badge.pack(side="left", padx=(0, Spacing.MD))
 
-            text_color = Colors.WARNING if num == "4" else Colors.TEXT_SECONDARY
+            text_color = Colors.WARNING if num == "4" else Colors.TEXT_SECONDARY  # noqa: E501
             font = Fonts.BODY_BOLD if num == "4" else Fonts.BODY
 
             step_label = ctk.CTkLabel(
@@ -239,8 +239,10 @@ class ScreenUpload(ctk.CTkFrame):
         from src.components import ToastPopup
 
         try:
-            followers_set = parse_instagram_json(self.app.data["followers_file"])
-            following_set = parse_instagram_json(self.app.data["following_file"])
+            followers_set = parse_instagram_json(
+                self.app.data["followers_file"])
+            following_set = parse_instagram_json(
+                self.app.data["following_file"])
 
             self.app.data["followers_set"] = followers_set
             self.app.data["following_set"] = following_set
@@ -254,7 +256,7 @@ class ScreenUpload(ctk.CTkFrame):
             self.app.switch_screen(ScreenResults)
 
         except Exception as e:
-            # [SECURITY]: Do not leak exception details to the user to prevent path/system info exposure.
+            # [SECURITY]: Do not leak exception details to the user to prevent path/system info exposure.  # noqa: E501
             print(f"Parsing error: {e}")
             ToastPopup(
                 self.app,
@@ -275,4 +277,3 @@ class ScreenUpload(ctk.CTkFrame):
         if len(short) > max_len:
             return f".../{filename}"
         return short
-

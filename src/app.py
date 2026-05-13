@@ -33,7 +33,8 @@ class App(ctk.CTk):
 
         self._center_window()
 
-        # Named 'data' (not 'state') to avoid shadowing tkinter's state() method.
+        # Named 'data' (not 'state') to avoid shadowing tkinter's state()
+        # method.
         self.data = {
             "followers_file": None,
             "following_file": None,
@@ -78,4 +79,3 @@ class App(ctk.CTk):
             "non_followers": [],
             "whitelist": set(),
         }
-
