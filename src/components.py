@@ -238,6 +238,11 @@ class ToastPopup(ctk.CTkToplevel):
         self.attributes("-topmost", True)
         self.grab_set()
 
+        # [UX] Keyboard accessibility for modal
+        self.focus_set()
+        self.bind("<Escape>", lambda e: self._safe_destroy())
+        self.bind("<Return>", lambda e: self._safe_destroy())
+
         color_map = {
             "success": Colors.SUCCESS,
             "error": Colors.DANGER,
