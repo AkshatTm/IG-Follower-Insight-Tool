@@ -255,9 +255,9 @@ class ScreenUpload(ctk.CTkFrame):
 
         except Exception as e:
             print(f"Parsing error: {e}")
-            # Show the actual error so the user knows what went wrong.
-            error_msg = str(e) if str(e) else (
-                "Invalid JSON format. Please ensure you downloaded "
+            # [SECURITY]: Do not leak raw exception details to the user.
+            error_msg = (
+                "Invalid format or file error. Please ensure you downloaded "
                 "the correct Instagram data (JSON format, All Time)."
             )
             ToastPopup(
