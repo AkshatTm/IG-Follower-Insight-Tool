@@ -238,6 +238,13 @@ class ToastPopup(ctk.CTkToplevel):
         self.attributes("-topmost", True)
         self.grab_set()
 
+        # [UX] Grab focus so keyboard events target the modal
+        self.focus_set()
+
+        # [UX] Allow keyboard dismissal
+        self.bind("<Escape>", lambda e: self.destroy())
+        self.bind("<Return>", lambda e: self.destroy())
+
         color_map = {
             "success": Colors.SUCCESS,
             "error": Colors.DANGER,
