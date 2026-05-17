@@ -13,6 +13,11 @@ import os
 import re
 from typing import Set, List
 
+# Pre-compiled regex for sanitizing usernames
+# By compiling at the module level, we avoid compiling the regex thousands of times
+# during the processing of large Instagram exports.
+CLEAN_USERNAME_REGEX = re.compile(r'[^a-zA-Z0-9._]')
+
 
 def parse_instagram_json(filepath: str) -> Set[str]:
     """
@@ -140,7 +145,7 @@ def _extract_username(entry: dict) -> str | None:
             value = sld[0].get("value", "")
             if isinstance(value, str) and value.strip():
                 # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)
-                clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])
+                clean_value = CLEAN_USERNAME_REGEX.sub('', value.strip()[:max_len])
                 if clean_value:
                     return clean_value
     except (AttributeError, IndexError, TypeError):
@@ -152,7 +157,7 @@ def _extract_username(entry: dict) -> str | None:
         value = entry.get("title", "")
         if isinstance(value, str) and value.strip():
             # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)
-            clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])
+            clean_value = CLEAN_USERNAME_REGEX.sub('', value.strip()[:max_len])
             if clean_value:
                 return clean_value
     except (AttributeError, TypeError):
@@ -163,7 +168,7 @@ def _extract_username(entry: dict) -> str | None:
         value = entry.get("value", "")
         if isinstance(value, str) and value.strip():
             # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)
-            clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])
+            clean_value = CLEAN_USERNAME_REGEX.sub('', value.strip()[:max_len])
             if clean_value:
                 return clean_value
     except (AttributeError, TypeError):
@@ -174,7 +179,7 @@ def _extract_username(entry: dict) -> str | None:
         value = entry.get("username", "")
         if isinstance(value, str) and value.strip():
             # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)
-            clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])
+            clean_value = CLEAN_USERNAME_REGEX.sub('', value.strip()[:max_len])
             if clean_value:
                 return clean_value
     except (AttributeError, TypeError):
