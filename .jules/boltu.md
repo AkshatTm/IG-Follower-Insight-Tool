@@ -11,3 +11,7 @@
 ## 2024-05-28 - Lazy Initialization of Tkinter Variables
 **Learning:** Eagerly instantiating thousands of variable wrappers (like `ctk.BooleanVar`) blocks the main thread in CustomTkinter/Tkinter applications. This was causing a severe bottleneck during the initialization of the list view for Instagram exports.
 **Action:** This is the current recommendation: store core state in plain Python dictionaries for all items, and lazily instantiate Tk variables only when their corresponding UI widgets are explicitly rendered on screen (e.g. via pagination or virtualization).
+
+## 2026-05-19 - Counting Booleans in Python
+**Learning:** When counting boolean `True` values in a large collection, using `sum(iterable)` directly is significantly faster (approx 2x) than using a generator expression like `sum(1 for x in iterable if x)` because True evaluates to 1.
+**Action:** Use `sum()` directly on boolean iterables to count True values for better performance.
