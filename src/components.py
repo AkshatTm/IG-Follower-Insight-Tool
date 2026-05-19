@@ -281,6 +281,11 @@ class ToastPopup(ctk.CTkToplevel):
         )
         ok_btn.pack(pady=(0, Spacing.LG))
 
+        # [UX] Keyboard Accessibility
+        self.focus_set()
+        self.bind("<Escape>", lambda e: self._safe_destroy())
+        self.bind("<Return>", lambda e: self._safe_destroy())
+
         if duration_ms > 0:
             self.after(duration_ms, self._safe_destroy)
 
