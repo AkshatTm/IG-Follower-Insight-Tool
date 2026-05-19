@@ -28,3 +28,8 @@
 **Vulnerability:** The application was exporting a list of non-followers directly to a `.txt` file. If a username started with a character like `=`, `+`, `-`, or `@`, and the `.txt` file was imported into spreadsheet software like Excel, it could be executed as a formula, leading to CSV/Formula Injection.
 **Learning:** Even simple `.txt` exports can be vulnerable to formula injection if the intent is for users to import the data into spreadsheets or databases. Mitigation must be applied at the export boundary, not by destructively stripping valid characters at parse time.
 **Prevention:** Always prepend a single quote (`'`) to strings that begin with `=`, `+`, `-`, or `@` when generating files meant to be imported into spreadsheet applications.
+
+## 2026-05-19 - Information Exposure via Raw Exception Strings in UI
+**Vulnerability:** UI components directly rendering raw Python exceptions (e.g., `str(e)`), exposing system paths and internal application state to end users.
+**Learning:** Exception handling for user-facing prompts in this CustomTkinter application often leaks data due to direct casting of `Exception` objects to strings.
+**Prevention:** Always log raw exception details to the console/logger and explicitly hardcode sanitized, generic error messages for UI components like `ToastPopup`.
