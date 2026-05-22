@@ -15,3 +15,7 @@
 ## 2024-05-18 - Hover Feedback on Buttons
 **Learning:** In CustomTkinter, buttons do not automatically change the cursor to a pointer (hand) on hover. This leads to a lack of visual feedback for interactivity, which is a standard expectation in modern UI/UX design.
 **Action:** Always explicitly set `cursor="hand2"` on reusable interactive components (like `ActionButton` subclassing `ctk.CTkButton`) to ensure users receive clear visual indication that the element is clickable.
+
+## 2024-05-22 - Modal Keyboard Accessibility
+**Learning:** In CustomTkinter, modal dialogs (`CTkToplevel`) can trap keyboard-only users if focus and keyboard dismissal bindings are missing.
+**Action:** Always call `self.focus_set()` and bind dismissal keys (`<Escape>`, `<Return>`) to the destroy method (e.g., using `lambda e: self.destroy()` to absorb the event argument) to ensure keyboard accessibility.
