@@ -284,6 +284,11 @@ class ToastPopup(ctk.CTkToplevel):
         if duration_ms > 0:
             self.after(duration_ms, self._safe_destroy)
 
+        # [UX/A11y] Support keyboard dismissal for the popup modal
+        self.focus_set()
+        self.bind("<Escape>", lambda e: self._safe_destroy())
+        self.bind("<Return>", lambda e: self._safe_destroy())
+
     def _safe_destroy(self):
         try:
             self.destroy()
