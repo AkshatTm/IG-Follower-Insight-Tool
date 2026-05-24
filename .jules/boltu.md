@@ -11,3 +11,7 @@
 ## 2024-05-28 - Lazy Initialization of Tkinter Variables
 **Learning:** Eagerly instantiating thousands of variable wrappers (like `ctk.BooleanVar`) blocks the main thread in CustomTkinter/Tkinter applications. This was causing a severe bottleneck during the initialization of the list view for Instagram exports.
 **Action:** This is the current recommendation: store core state in plain Python dictionaries for all items, and lazily instantiate Tk variables only when their corresponding UI widgets are explicitly rendered on screen (e.g. via pagination or virtualization).
+
+## 2026-05-24 - Pre-compile Regex in Large Iteration Loops
+**Learning:** Compiling regex inline inside loops that process large arrays adds significant overhead. Pre-compiling `re.compile()` at the module level speeds up execution.
+**Action:** Always pre-compile regex objects at the module level when used inside loops processing large quantities of data.
