@@ -58,6 +58,9 @@ class ScreenFilter(ctk.CTkFrame):
         # Track debounce job for search
         self._search_job = None
 
+        # Pre-compute lowered usernames for faster search
+        self._user_tuples = [(u, u.lower()) for u in self.non_followers]
+
         self._build_ui()
 
     # ─────────────────────────────────────
@@ -171,16 +174,19 @@ class ScreenFilter(ctk.CTkFrame):
 
     def _populate_rows(self, clear=False):
         """Create rows for the currently visible slice of filtered users with VIP toggle switches."""
-        if clear:
-            for widget in self._row_widgets.values():
-                widget.destroy()
-            self._row_widgets.clear()
-
         if getattr(self, '_load_more_btn', None) is not None and self._load_more_btn.winfo_exists():
             self._load_more_btn.destroy()
 
-        start_idx = len(self._row_widgets)
         end_idx = min(self._visible_limit, len(self._filtered_users))
+        target_usernames = self._filtered_users[:end_idx]
+        target_usernames_set = set(target_usernames)
+
+        current_usernames = set(self._row_widgets.keys())
+
+        # Pack forget unused widgets instead of destroying them to reuse them later
+        to_remove = current_usernames - target_usernames_set
+        for u in to_remove:
+            self._row_widgets[u].pack_forget()
 
         def create_toggle_handler(u, v):
             def handler(event=None):
@@ -195,66 +201,68 @@ class ScreenFilter(ctk.CTkFrame):
                 self._update_counter()
             return handler
 
-        for i in range(start_idx, end_idx):
-            username = self._filtered_users[i]
+        for username in target_usernames:
+            if username not in self._row_widgets:
+                # Lazily instantiate Tkinter variable
+                if username not in self._vip_vars:
+                    self._vip_vars[username] = ctk.BooleanVar(value=self._vip_state.get(username, False))
+                else:
+                    self._vip_vars[username].set(self._vip_state.get(username, False))
 
-            # Lazily instantiate Tkinter variable
-            if username not in self._vip_vars:
-                self._vip_vars[username] = ctk.BooleanVar(value=self._vip_state.get(username, False))
-            else:
-                self._vip_vars[username].set(self._vip_state.get(username, False))
+                var = self._vip_vars[username]
 
-            var = self._vip_vars[username]
+                # Row frame
+                row = ctk.CTkFrame(
+                    self.scroll_frame,
+                    fg_color="transparent",
+                    height=40,
+                    cursor="hand2"
+                )
 
-            # Row frame
-            row = ctk.CTkFrame(
-                self.scroll_frame,
-                fg_color="transparent",
-                height=40,
-                cursor="hand2"
-            )
-            row.pack(fill="x", padx=Spacing.MD, pady=2)
+                # Username label
+                user_label = ctk.CTkLabel(
+                    row,
+                    text=f"@{username}",
+                    font=Fonts.BODY,
+                    text_color=Colors.TEXT_PRIMARY,
+                    anchor="w",
+                    cursor="hand2"
+                )
+                user_label.pack(side="left", fill="x", expand=True)
 
-            # Username label
-            user_label = ctk.CTkLabel(
-                row,
-                text=f"@{username}",
-                font=Fonts.BODY,
-                text_color=Colors.TEXT_PRIMARY,
-                anchor="w",
-                cursor="hand2"
-            )
-            user_label.pack(side="left", fill="x", expand=True)
+                # VIP switch
+                switch = ctk.CTkSwitch(
+                    row,
+                    text="VIP",
+                    font=Fonts.SMALL,
+                    variable=var,
+                    onvalue=True,
+                    offvalue=False,
+                    text_color=Colors.TEXT_MUTED,
+                    progress_color=Colors.SUCCESS,
+                    button_color=Colors.TEXT_SECONDARY,
+                    button_hover_color=Colors.ACCENT_LIGHT
+                )
+                switch.pack(side="right")
 
-            # VIP switch
-            switch = ctk.CTkSwitch(
-                row,
-                text="VIP",
-                font=Fonts.SMALL,
-                variable=var,
-                onvalue=True,
-                offvalue=False,
-                text_color=Colors.TEXT_MUTED,
-                progress_color=Colors.SUCCESS,
-                button_color=Colors.TEXT_SECONDARY,
-                button_hover_color=Colors.ACCENT_LIGHT
-            )
-            switch.pack(side="right")
+                # Update state when switch is clicked directly
+                switch.configure(command=create_toggle_handler(username, var))
 
-            # Update state when switch is clicked directly
-            switch.configure(command=create_toggle_handler(username, var))
+                # Bind click events for row-level toggling
+                handler = create_toggle_handler(username, var)
+                row.bind("<Button-1>", handler)
+                if hasattr(row, "_canvas"):
+                    row._canvas.bind("<Button-1>", handler)
+                user_label.bind("<Button-1>", handler)
+                if hasattr(user_label, "_label"):
+                    user_label._label.bind("<Button-1>", handler)
 
-            # Bind click events for row-level toggling
-            handler = create_toggle_handler(username, var)
-            row.bind("<Button-1>", handler)
-            if hasattr(row, "_canvas"):
-                row._canvas.bind("<Button-1>", handler)
-            user_label.bind("<Button-1>", handler)
-            if hasattr(user_label, "_label"):
-                user_label._label.bind("<Button-1>", handler)
+                # Store reference for destroying later
+                self._row_widgets[username] = row
 
-            # Store reference for destroying later
-            self._row_widgets[username] = row
+            # Since pack() appends, we must unpack and repack to maintain alphabetical order
+            self._row_widgets[username].pack_forget()
+            self._row_widgets[username].pack(fill="x", padx=Spacing.MD, pady=2)
 
         if self._visible_limit < len(self._filtered_users):
             from src.components import ActionButton
@@ -324,15 +332,19 @@ class ScreenFilter(ctk.CTkFrame):
         """Filter the visible rows based on search query using pagination."""
         query = self.search_entry.get().lower().strip()
 
+        if getattr(self, '_last_query', None) == query:
+            return
+        self._last_query = query
+
         if query == "":
             self._filtered_users = self.non_followers.copy()
         else:
             self._filtered_users = [
-                u for u in self.non_followers if query in u.lower()
+                orig for orig, low in self._user_tuples if query in low
             ]
 
         self._visible_limit = self.PAGE_SIZE
-        self._populate_rows(clear=True)
+        self._populate_rows()
 
         visible_count = len(self._filtered_users)
 
