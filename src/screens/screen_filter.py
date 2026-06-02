@@ -45,6 +45,11 @@ class ScreenFilter(ctk.CTkFrame):
 
         # Track rendered row widgets: {username: frame_widget}
         self._row_widgets = {}
+
+        # [PERFORMANCE]: Pre-compute lowercased usernames to avoid doing .lower()
+        # inside the list comprehension during frequent search keystrokes.
+        self._searchable_users = [(u, u.lower()) for u in self.non_followers]
+
         # Track currently filtered users
         self._filtered_users = self.non_followers.copy()
 
@@ -172,14 +177,16 @@ class ScreenFilter(ctk.CTkFrame):
     def _populate_rows(self, clear=False):
         """Create rows for the currently visible slice of filtered users with VIP toggle switches."""
         if clear:
+            # [PERFORMANCE]: Use widget pooling instead of destroying widgets
+            # to prevent severe main thread blocking on search keystrokes.
             for widget in self._row_widgets.values():
-                widget.destroy()
-            self._row_widgets.clear()
+                widget.pack_forget()
 
         if getattr(self, '_load_more_btn', None) is not None and self._load_more_btn.winfo_exists():
             self._load_more_btn.destroy()
 
-        start_idx = len(self._row_widgets)
+        # Derive start_idx explicitly since _row_widgets is now a persistent cache pool
+        start_idx = 0 if clear else max(0, self._visible_limit - self.PAGE_SIZE)
         end_idx = min(self._visible_limit, len(self._filtered_users))
 
         def create_toggle_handler(u, v):
@@ -205,6 +212,12 @@ class ScreenFilter(ctk.CTkFrame):
                 self._vip_vars[username].set(self._vip_state.get(username, False))
 
             var = self._vip_vars[username]
+
+            # Try to reuse pooled widget
+            if username in self._row_widgets:
+                row = self._row_widgets[username]
+                row.pack(fill="x", padx=Spacing.MD, pady=2)
+                continue
 
             # Row frame
             row = ctk.CTkFrame(
@@ -328,7 +341,7 @@ class ScreenFilter(ctk.CTkFrame):
             self._filtered_users = self.non_followers.copy()
         else:
             self._filtered_users = [
-                u for u in self.non_followers if query in u.lower()
+                u for u, u_lower in self._searchable_users if query in u_lower
             ]
 
         self._visible_limit = self.PAGE_SIZE
