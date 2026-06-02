@@ -28,3 +28,7 @@
 **Vulnerability:** The application was exporting a list of non-followers directly to a `.txt` file. If a username started with a character like `=`, `+`, `-`, or `@`, and the `.txt` file was imported into spreadsheet software like Excel, it could be executed as a formula, leading to CSV/Formula Injection.
 **Learning:** Even simple `.txt` exports can be vulnerable to formula injection if the intent is for users to import the data into spreadsheets or databases. Mitigation must be applied at the export boundary, not by destructively stripping valid characters at parse time.
 **Prevention:** Always prepend a single quote (`'`) to strings that begin with `=`, `+`, `-`, or `@` when generating files meant to be imported into spreadsheet applications.
+## 2024-03-24 - Information Exposure in UI
+**Vulnerability:** Raw exception messages containing system file paths and error details were being displayed to users via `ToastPopup`.
+**Learning:** System errors and stack traces should never be displayed in the UI as they can expose sensitive internal paths and logic.
+**Prevention:** Always log the raw error to the console or backend, but show a sanitized, generic error message to the user.
