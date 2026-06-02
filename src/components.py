@@ -236,7 +236,6 @@ class ToastPopup(ctk.CTkToplevel):
         self.configure(fg_color=Colors.BG_DARK)
 
         self.attributes("-topmost", True)
-        self.grab_set()
 
         color_map = {
             "success": Colors.SUCCESS,
@@ -281,8 +280,14 @@ class ToastPopup(ctk.CTkToplevel):
         )
         ok_btn.pack(pady=(0, Spacing.LG))
 
+        self.bind("<Escape>", lambda e: self._safe_destroy())
+        self.bind("<Return>", lambda e: self._safe_destroy())
+
         if duration_ms > 0:
             self.after(duration_ms, self._safe_destroy)
+        else:
+            self.grab_set()
+            self.focus_set()
 
     def _safe_destroy(self):
         try:
