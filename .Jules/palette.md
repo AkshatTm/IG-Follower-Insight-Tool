@@ -15,3 +15,7 @@
 ## 2024-05-18 - Hover Feedback on Buttons
 **Learning:** In CustomTkinter, buttons do not automatically change the cursor to a pointer (hand) on hover. This leads to a lack of visual feedback for interactivity, which is a standard expectation in modern UI/UX design.
 **Action:** Always explicitly set `cursor="hand2"` on reusable interactive components (like `ActionButton` subclassing `ctk.CTkButton`) to ensure users receive clear visual indication that the element is clickable.
+
+## 2024-06-08 - Non-blocking Toast Notifications
+**Learning:** In CustomTkinter, applying `grab_set()` to transient notifications (like auto-dismissing toasts) creates a severe UX regression by interrupting user workflow. Only apply modality and focus-stealing to explicit, blocking dialogs.
+**Action:** Remove `grab_set()` from `ToastPopup` to ensure notifications are non-blocking.
