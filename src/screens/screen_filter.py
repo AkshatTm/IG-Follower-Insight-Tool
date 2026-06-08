@@ -48,6 +48,9 @@ class ScreenFilter(ctk.CTkFrame):
         # Track currently filtered users
         self._filtered_users = self.non_followers.copy()
 
+        # Pre-compute lowercase usernames for fast search filtering
+        self._searchable_data = {u: u.lower() for u in self.non_followers}
+
         # Pagination state
         self.PAGE_SIZE = 100
         self._visible_limit = self.PAGE_SIZE
@@ -173,13 +176,12 @@ class ScreenFilter(ctk.CTkFrame):
         """Create rows for the currently visible slice of filtered users with VIP toggle switches."""
         if clear:
             for widget in self._row_widgets.values():
-                widget.destroy()
-            self._row_widgets.clear()
+                widget.pack_forget()
 
         if getattr(self, '_load_more_btn', None) is not None and self._load_more_btn.winfo_exists():
             self._load_more_btn.destroy()
 
-        start_idx = len(self._row_widgets)
+        start_idx = 0 if clear else max(0, self._visible_limit - self.PAGE_SIZE)
         end_idx = min(self._visible_limit, len(self._filtered_users))
 
         def create_toggle_handler(u, v):
@@ -205,6 +207,10 @@ class ScreenFilter(ctk.CTkFrame):
                 self._vip_vars[username].set(self._vip_state.get(username, False))
 
             var = self._vip_vars[username]
+
+            if username in self._row_widgets:
+                self._row_widgets[username].pack(fill="x", padx=Spacing.MD, pady=2)
+                continue
 
             # Row frame
             row = ctk.CTkFrame(
@@ -328,7 +334,7 @@ class ScreenFilter(ctk.CTkFrame):
             self._filtered_users = self.non_followers.copy()
         else:
             self._filtered_users = [
-                u for u in self.non_followers if query in u.lower()
+                u for u in self.non_followers if query in self._searchable_data[u]
             ]
 
         self._visible_limit = self.PAGE_SIZE
