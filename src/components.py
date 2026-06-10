@@ -236,7 +236,14 @@ class ToastPopup(ctk.CTkToplevel):
         self.configure(fg_color=Colors.BG_DARK)
 
         self.attributes("-topmost", True)
-        self.grab_set()
+
+        # [UX] Only make the toast modal and steal focus if it is a blocking
+        # dialog (duration <= 0). Transient notifications should not steal focus.
+        if duration_ms <= 0:
+            self.grab_set()
+            self.focus_set()
+            self.bind("<Escape>", lambda e: self.destroy())
+            self.bind("<Return>", lambda e: self.destroy())
 
         color_map = {
             "success": Colors.SUCCESS,
