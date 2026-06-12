@@ -43,8 +43,9 @@ class ScreenFilter(ctk.CTkFrame):
         # Lazy instantiation of Tkinter variables
         self._vip_vars = {}
 
-        # Track rendered row widgets: {username: frame_widget}
-        self._row_widgets = {}
+        # Widget pool to avoid destroying/recreating widgets on every search
+        # Contains dicts: {"row": CTkFrame, "label": CTkLabel, "switch": CTkSwitch}
+        self._row_pool = []
         # Track currently filtered users
         self._filtered_users = self.non_followers.copy()
 
@@ -170,22 +171,23 @@ class ScreenFilter(ctk.CTkFrame):
         self._populate_rows()
 
     def _populate_rows(self, clear=False):
-        """Create rows for the currently visible slice of filtered users with VIP toggle switches."""
-        if clear:
-            for widget in self._row_widgets.values():
-                widget.destroy()
-            self._row_widgets.clear()
-
+        """Create rows for the currently visible slice of filtered users with VIP toggle switches using a widget pool."""
         if getattr(self, '_load_more_btn', None) is not None and self._load_more_btn.winfo_exists():
             self._load_more_btn.destroy()
 
-        start_idx = len(self._row_widgets)
+        if clear:
+            start_idx = 0
+            # Hide all currently pooled widgets when clearing
+            for item in self._row_pool:
+                item["row"].pack_forget()
+        else:
+            # If not clear, calculate how many visible rows we currently have packed
+            start_idx = max(0, self._visible_limit - self.PAGE_SIZE)
+
         end_idx = min(self._visible_limit, len(self._filtered_users))
 
         def create_toggle_handler(u, v):
             def handler(event=None):
-                # When invoked by CTkSwitch command, the variable is already toggled.
-                # When invoked by row click (event is not None), we must toggle it manually.
                 if event is not None:
                     new_state = not v.get()
                     v.set(new_state)
@@ -197,6 +199,7 @@ class ScreenFilter(ctk.CTkFrame):
 
         for i in range(start_idx, end_idx):
             username = self._filtered_users[i]
+            pool_idx = i
 
             # Lazily instantiate Tkinter variable
             if username not in self._vip_vars:
@@ -205,56 +208,46 @@ class ScreenFilter(ctk.CTkFrame):
                 self._vip_vars[username].set(self._vip_state.get(username, False))
 
             var = self._vip_vars[username]
-
-            # Row frame
-            row = ctk.CTkFrame(
-                self.scroll_frame,
-                fg_color="transparent",
-                height=40,
-                cursor="hand2"
-            )
-            row.pack(fill="x", padx=Spacing.MD, pady=2)
-
-            # Username label
-            user_label = ctk.CTkLabel(
-                row,
-                text=f"@{username}",
-                font=Fonts.BODY,
-                text_color=Colors.TEXT_PRIMARY,
-                anchor="w",
-                cursor="hand2"
-            )
-            user_label.pack(side="left", fill="x", expand=True)
-
-            # VIP switch
-            switch = ctk.CTkSwitch(
-                row,
-                text="VIP",
-                font=Fonts.SMALL,
-                variable=var,
-                onvalue=True,
-                offvalue=False,
-                text_color=Colors.TEXT_MUTED,
-                progress_color=Colors.SUCCESS,
-                button_color=Colors.TEXT_SECONDARY,
-                button_hover_color=Colors.ACCENT_LIGHT
-            )
-            switch.pack(side="right")
-
-            # Update state when switch is clicked directly
-            switch.configure(command=create_toggle_handler(username, var))
-
-            # Bind click events for row-level toggling
             handler = create_toggle_handler(username, var)
-            row.bind("<Button-1>", handler)
-            if hasattr(row, "_canvas"):
-                row._canvas.bind("<Button-1>", handler)
-            user_label.bind("<Button-1>", handler)
-            if hasattr(user_label, "_label"):
-                user_label._label.bind("<Button-1>", handler)
 
-            # Store reference for destroying later
-            self._row_widgets[username] = row
+            if pool_idx < len(self._row_pool):
+                # Reuse existing widget
+                item = self._row_pool[pool_idx]
+                item["label"].configure(text=f"@{username}")
+                item["switch"].configure(variable=var, command=handler)
+
+                item["row"].bind("<Button-1>", handler)
+                if hasattr(item["row"], "_canvas"):
+                    item["row"]._canvas.bind("<Button-1>", handler)
+                item["label"].bind("<Button-1>", handler)
+                if hasattr(item["label"], "_label"):
+                    item["label"]._label.bind("<Button-1>", handler)
+
+                item["row"].pack(fill="x", padx=Spacing.MD, pady=2)
+            else:
+                # Instantiate new widget
+                row = ctk.CTkFrame(self.scroll_frame, fg_color="transparent", height=40, cursor="hand2")
+                row.pack(fill="x", padx=Spacing.MD, pady=2)
+
+                user_label = ctk.CTkLabel(row, text=f"@{username}", font=Fonts.BODY, text_color=Colors.TEXT_PRIMARY, anchor="w", cursor="hand2")
+                user_label.pack(side="left", fill="x", expand=True)
+
+                switch = ctk.CTkSwitch(row, text="VIP", font=Fonts.SMALL, variable=var, onvalue=True, offvalue=False, text_color=Colors.TEXT_MUTED, progress_color=Colors.SUCCESS, button_color=Colors.TEXT_SECONDARY, button_hover_color=Colors.ACCENT_LIGHT)
+                switch.pack(side="right")
+
+                switch.configure(command=handler)
+                row.bind("<Button-1>", handler)
+                if hasattr(row, "_canvas"):
+                    row._canvas.bind("<Button-1>", handler)
+                user_label.bind("<Button-1>", handler)
+                if hasattr(user_label, "_label"):
+                    user_label._label.bind("<Button-1>", handler)
+
+                self._row_pool.append({"row": row, "label": user_label, "switch": switch})
+
+        # Hide any unused widgets in the pool beyond end_idx
+        for j in range(end_idx, len(self._row_pool)):
+            self._row_pool[j]["row"].pack_forget()
 
         if self._visible_limit < len(self._filtered_users):
             from src.components import ActionButton
