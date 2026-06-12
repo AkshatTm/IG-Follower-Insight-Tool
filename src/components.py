@@ -236,7 +236,6 @@ class ToastPopup(ctk.CTkToplevel):
         self.configure(fg_color=Colors.BG_DARK)
 
         self.attributes("-topmost", True)
-        self.grab_set()
 
         color_map = {
             "success": Colors.SUCCESS,
