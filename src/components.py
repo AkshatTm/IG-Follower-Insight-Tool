@@ -236,7 +236,13 @@ class ToastPopup(ctk.CTkToplevel):
         self.configure(fg_color=Colors.BG_DARK)
 
         self.attributes("-topmost", True)
-        self.grab_set()
+
+        # Only steal focus and block interactions if this is an explicit, non-auto-dismissing dialog
+        if duration_ms == 0:
+            self.grab_set()
+            self.focus_set()
+            self.bind("<Escape>", lambda e: self.destroy())
+            self.bind("<Return>", lambda e: self.destroy())
 
         color_map = {
             "success": Colors.SUCCESS,
