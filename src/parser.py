@@ -13,22 +13,26 @@ import os
 import re
 from typing import Set, List
 
+# [PERFORMANCE]: Pre-compile the regex at module level to avoid re-parsing it
+# on every username across tens of thousands of entries.
+USERNAME_SANITIZER_RE = re.compile(r'[^a-zA-Z0-9._]')
+
 
 def parse_instagram_json(filepath: str) -> Set[str]:
     """
     Parse an Instagram JSON data export file and extract usernames.
-    
+
     Instagram has used multiple JSON structures over time:
       Pattern A (current):  [ { "string_list_data": [{"value": "username"}] } ]
       Pattern B (wrapped):  { "relationships_...": [ { "string_list_data": [...] } ] }
       Pattern C (flat):     [ { "value": "username" } ]
-    
+
     Args:
         filepath: Path to the JSON file (followers_1.json or following.json)
-    
+
     Returns:
         A set of unique username strings.
-    
+
     Raises:
         ValueError: If the JSON structure is unrecognized.
         json.JSONDecodeError: If the file is not valid JSON.
@@ -117,13 +121,13 @@ def parse_instagram_json(filepath: str) -> Set[str]:
 def _extract_username(entry: dict) -> str | None:
     """
     Extract a username from a single entry using multiple patterns.
-    
+
     Tries (in order):
       1. entry['string_list_data'][0]['value']   — Most common pattern
       2. entry['title']                           — Newer Instagram export (following.json)
       3. entry['value']                           — Flat pattern
       4. entry['username']                        — Direct pattern
-    
+
     Returns the username string or None if extraction fails.
     """
     if not isinstance(entry, dict):
@@ -140,7 +144,7 @@ def _extract_username(entry: dict) -> str | None:
             value = sld[0].get("value", "")
             if isinstance(value, str) and value.strip():
                 # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)
-                clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])
+                clean_value = USERNAME_SANITIZER_RE.sub('', value.strip()[:max_len])
                 if clean_value:
                     return clean_value
     except (AttributeError, IndexError, TypeError):
@@ -152,7 +156,7 @@ def _extract_username(entry: dict) -> str | None:
         value = entry.get("title", "")
         if isinstance(value, str) and value.strip():
             # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)
-            clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])
+            clean_value = USERNAME_SANITIZER_RE.sub('', value.strip()[:max_len])
             if clean_value:
                 return clean_value
     except (AttributeError, TypeError):
@@ -163,7 +167,7 @@ def _extract_username(entry: dict) -> str | None:
         value = entry.get("value", "")
         if isinstance(value, str) and value.strip():
             # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)
-            clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])
+            clean_value = USERNAME_SANITIZER_RE.sub('', value.strip()[:max_len])
             if clean_value:
                 return clean_value
     except (AttributeError, TypeError):
@@ -174,7 +178,7 @@ def _extract_username(entry: dict) -> str | None:
         value = entry.get("username", "")
         if isinstance(value, str) and value.strip():
             # [SECURITY]: Sanitize username to prevent downstream format injection (CSV/Formula injection)
-            clean_value = re.sub(r'[^a-zA-Z0-9._]', '', value.strip()[:max_len])
+            clean_value = USERNAME_SANITIZER_RE.sub('', value.strip()[:max_len])
             if clean_value:
                 return clean_value
     except (AttributeError, TypeError):
@@ -187,11 +191,11 @@ def calculate_non_followers(following_set: Set[str],
                              followers_set: Set[str]) -> List[str]:
     """
     Calculate users you follow who don't follow you back.
-    
+
     Args:
         following_set: People you are following
         followers_set: People who follow you
-    
+
     Returns:
         Sorted list of usernames (following - followers).
     """
