@@ -28,3 +28,8 @@
 **Vulnerability:** The application was exporting a list of non-followers directly to a `.txt` file. If a username started with a character like `=`, `+`, `-`, or `@`, and the `.txt` file was imported into spreadsheet software like Excel, it could be executed as a formula, leading to CSV/Formula Injection.
 **Learning:** Even simple `.txt` exports can be vulnerable to formula injection if the intent is for users to import the data into spreadsheets or databases. Mitigation must be applied at the export boundary, not by destructively stripping valid characters at parse time.
 **Prevention:** Always prepend a single quote (`'`) to strings that begin with `=`, `+`, `-`, or `@` when generating files meant to be imported into spreadsheet applications.
+
+## 2026-05-06 - Prevent Error Message Information Leakage in Screen Upload
+**Vulnerability:** The application was exposing raw exception messages (`str(e)`) to the UI via `ToastPopup` upon parsing failures in `screen_upload.py`.
+**Learning:** Exposing raw exception details can leak sensitive system information such as directory structures and local file paths.
+**Prevention:** Catch exceptions and log them using a secure backend mechanism (like `print` or a logging framework), while displaying a generic, sanitized, user-friendly error message in the UI instead.
