@@ -236,7 +236,13 @@ class ToastPopup(ctk.CTkToplevel):
         self.configure(fg_color=Colors.BG_DARK)
 
         self.attributes("-topmost", True)
-        self.grab_set()
+
+        # Only apply modality to blocking dialogs to avoid UX regression.
+        if duration_ms <= 0:
+            self.grab_set()
+            self.focus_set()
+            self.bind("<Escape>", lambda e: self.destroy())
+            self.bind("<Return>", lambda e: self.destroy())
 
         color_map = {
             "success": Colors.SUCCESS,
