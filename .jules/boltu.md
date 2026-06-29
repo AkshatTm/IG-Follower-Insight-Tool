@@ -11,3 +11,7 @@
 ## 2024-05-28 - Lazy Initialization of Tkinter Variables
 **Learning:** Eagerly instantiating thousands of variable wrappers (like `ctk.BooleanVar`) blocks the main thread in CustomTkinter/Tkinter applications. This was causing a severe bottleneck during the initialization of the list view for Instagram exports.
 **Action:** This is the current recommendation: store core state in plain Python dictionaries for all items, and lazily instantiate Tk variables only when their corresponding UI widgets are explicitly rendered on screen (e.g. via pagination or virtualization).
+
+## 2026-06-29 - Tkinter Widget Pooling Optimization
+**Learning:** Destroying and re-instantiating thousands of CustomTkinter widgets during frequent UI updates (like rapid search filtering) severely blocks the main thread and causes UI lag.
+**Action:** Implement widget pooling by reusing existing generic list widgets and utilizing `pack_forget()` alongside an `is_packed` tracking flag to toggle visibility without redundant layout recalculations or memory-intensive instantiation.
