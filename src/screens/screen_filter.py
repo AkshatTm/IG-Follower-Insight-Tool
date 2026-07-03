@@ -43,8 +43,9 @@ class ScreenFilter(ctk.CTkFrame):
         # Lazy instantiation of Tkinter variables
         self._vip_vars = {}
 
-        # Track rendered row widgets: {username: frame_widget}
-        self._row_widgets = {}
+        # Widget pool to avoid destroying and recreating frames
+        self._row_pool = []
+        self._rendered_count = 0
         # Track currently filtered users
         self._filtered_users = self.non_followers.copy()
 
@@ -170,16 +171,14 @@ class ScreenFilter(ctk.CTkFrame):
         self._populate_rows()
 
     def _populate_rows(self, clear=False):
-        """Create rows for the currently visible slice of filtered users with VIP toggle switches."""
+        """Create rows for the currently visible slice of filtered users using a widget pool."""
         if clear:
-            for widget in self._row_widgets.values():
-                widget.destroy()
-            self._row_widgets.clear()
+            self._rendered_count = 0
 
         if getattr(self, '_load_more_btn', None) is not None and self._load_more_btn.winfo_exists():
-            self._load_more_btn.destroy()
+            self._load_more_btn.pack_forget()
 
-        start_idx = len(self._row_widgets)
+        start_idx = self._rendered_count
         end_idx = min(self._visible_limit, len(self._filtered_users))
 
         def create_toggle_handler(u, v):
@@ -206,65 +205,86 @@ class ScreenFilter(ctk.CTkFrame):
 
             var = self._vip_vars[username]
 
-            # Row frame
-            row = ctk.CTkFrame(
-                self.scroll_frame,
-                fg_color="transparent",
-                height=40,
-                cursor="hand2"
-            )
-            row.pack(fill="x", padx=Spacing.MD, pady=2)
+            if i < len(self._row_pool):
+                pool_item = self._row_pool[i]
+            else:
+                # Row frame
+                row = ctk.CTkFrame(
+                    self.scroll_frame,
+                    fg_color="transparent",
+                    height=40,
+                    cursor="hand2"
+                )
 
-            # Username label
-            user_label = ctk.CTkLabel(
-                row,
-                text=f"@{username}",
-                font=Fonts.BODY,
-                text_color=Colors.TEXT_PRIMARY,
-                anchor="w",
-                cursor="hand2"
-            )
-            user_label.pack(side="left", fill="x", expand=True)
+                # Username label
+                user_label = ctk.CTkLabel(
+                    row,
+                    font=Fonts.BODY,
+                    text_color=Colors.TEXT_PRIMARY,
+                    anchor="w",
+                    cursor="hand2"
+                )
+                user_label.pack(side="left", fill="x", expand=True)
 
-            # VIP switch
-            switch = ctk.CTkSwitch(
-                row,
-                text="VIP",
-                font=Fonts.SMALL,
-                variable=var,
-                onvalue=True,
-                offvalue=False,
-                text_color=Colors.TEXT_MUTED,
-                progress_color=Colors.SUCCESS,
-                button_color=Colors.TEXT_SECONDARY,
-                button_hover_color=Colors.ACCENT_LIGHT
-            )
-            switch.pack(side="right")
+                # VIP switch
+                switch = ctk.CTkSwitch(
+                    row,
+                    text="VIP",
+                    font=Fonts.SMALL,
+                    onvalue=True,
+                    offvalue=False,
+                    text_color=Colors.TEXT_MUTED,
+                    progress_color=Colors.SUCCESS,
+                    button_color=Colors.TEXT_SECONDARY,
+                    button_hover_color=Colors.ACCENT_LIGHT
+                )
+                switch.pack(side="right")
+
+                pool_item = {
+                    "frame": row,
+                    "user_label": user_label,
+                    "switch": switch,
+                    "is_packed": False
+                }
+                self._row_pool.append(pool_item)
+
+            pool_item["user_label"].configure(text=f"@{username}")
 
             # Update state when switch is clicked directly
-            switch.configure(command=create_toggle_handler(username, var))
+            handler = create_toggle_handler(username, var)
+            pool_item["switch"].configure(variable=var, command=handler)
 
             # Bind click events for row-level toggling
-            handler = create_toggle_handler(username, var)
-            row.bind("<Button-1>", handler)
-            if hasattr(row, "_canvas"):
-                row._canvas.bind("<Button-1>", handler)
-            user_label.bind("<Button-1>", handler)
-            if hasattr(user_label, "_label"):
-                user_label._label.bind("<Button-1>", handler)
+            pool_item["frame"].bind("<Button-1>", handler)
+            if hasattr(pool_item["frame"], "_canvas"):
+                pool_item["frame"]._canvas.bind("<Button-1>", handler)
+            pool_item["user_label"].bind("<Button-1>", handler)
+            if hasattr(pool_item["user_label"], "_label"):
+                pool_item["user_label"]._label.bind("<Button-1>", handler)
 
-            # Store reference for destroying later
-            self._row_widgets[username] = row
+            if not pool_item["is_packed"]:
+                pool_item["frame"].pack(fill="x", padx=Spacing.MD, pady=2)
+                pool_item["is_packed"] = True
+
+        self._rendered_count = end_idx
+
+        # Hide unused widgets from the pool
+        for i in range(end_idx, len(self._row_pool)):
+            pool_item = self._row_pool[i]
+            if pool_item["is_packed"]:
+                pool_item["frame"].pack_forget()
+                pool_item["is_packed"] = False
 
         if self._visible_limit < len(self._filtered_users):
             from src.components import ActionButton
-            self._load_more_btn = ActionButton(
-                self.scroll_frame,
-                text="Load More",
-                variant="secondary",
-                height=36,
-                command=self._load_more
-            )
+            if getattr(self, '_load_more_btn', None) is None or not self._load_more_btn.winfo_exists():
+                self._load_more_btn = ActionButton(
+                    self.scroll_frame,
+                    text="Load More",
+                    variant="secondary",
+                    height=36,
+                    command=self._load_more
+                )
             self._load_more_btn.pack(pady=(Spacing.MD, Spacing.MD))
 
     def _load_more(self):
