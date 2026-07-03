@@ -15,3 +15,7 @@
 ## 2024-05-18 - Hover Feedback on Buttons
 **Learning:** In CustomTkinter, buttons do not automatically change the cursor to a pointer (hand) on hover. This leads to a lack of visual feedback for interactivity, which is a standard expectation in modern UI/UX design.
 **Action:** Always explicitly set `cursor="hand2"` on reusable interactive components (like `ActionButton` subclassing `ctk.CTkButton`) to ensure users receive clear visual indication that the element is clickable.
+
+## 2026-07-03 - ESC to Clear Search
+**Learning:** Users often need a fast way to clear search filters. Adding an ESC key shortcut to the search bar and updating the placeholder text to hint at it (`(ESC to clear)`) significantly improves keyboard accessibility and overall search UX.
+**Action:** Always include keyboard shortcuts to clear search inputs when implementing real-time filtering, and add placeholder text to make it discoverable.
