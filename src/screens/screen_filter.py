@@ -109,7 +109,7 @@ class ScreenFilter(ctk.CTkFrame):
 
         self.search_entry = ctk.CTkEntry(
             search_frame,
-            placeholder_text="🔍  Search by username...",
+            placeholder_text="🔍  Search by username... (Esc to clear)",
             font=Fonts.BODY,
             height=40,
             corner_radius=Radius.MD,
@@ -120,6 +120,16 @@ class ScreenFilter(ctk.CTkFrame):
         )
         self.search_entry.pack(fill="x")
         self.search_entry.bind("<KeyRelease>", self._on_search)
+
+        self.search_entry.bind("<FocusIn>", lambda e: self.search_entry.configure(border_color=Colors.ACCENT_PRIMARY))
+        self.search_entry.bind("<FocusOut>", lambda e: self.search_entry.configure(border_color=Colors.BORDER))
+
+        def _on_escape(event):
+            self.search_entry.delete(0, "end")
+            self._on_search()
+            self.focus_set()
+
+        self.search_entry.bind("<Escape>", _on_escape)
 
     def _build_user_list(self, parent):
         """Scrollable frame populated with username rows + VIP switches."""
