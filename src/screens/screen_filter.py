@@ -120,6 +120,15 @@ class ScreenFilter(ctk.CTkFrame):
         )
         self.search_entry.pack(fill="x")
         self.search_entry.bind("<KeyRelease>", self._on_search)
+        self.search_entry.bind("<FocusIn>", lambda e: self.search_entry.configure(border_color=Colors.ACCENT_PRIMARY))
+        self.search_entry.bind("<FocusOut>", lambda e: self.search_entry.configure(border_color=Colors.BORDER))
+        self.search_entry.bind("<Escape>", self._on_escape_search)
+
+    def _on_escape_search(self, event=None):
+        """Clear search on Escape and drop focus."""
+        self.search_entry.delete(0, "end")
+        self.focus_set()
+        self._on_search()
 
     def _build_user_list(self, parent):
         """Scrollable frame populated with username rows + VIP switches."""
