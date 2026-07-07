@@ -15,3 +15,7 @@
 ## 2024-05-18 - Hover Feedback on Buttons
 **Learning:** In CustomTkinter, buttons do not automatically change the cursor to a pointer (hand) on hover. This leads to a lack of visual feedback for interactivity, which is a standard expectation in modern UI/UX design.
 **Action:** Always explicitly set `cursor="hand2"` on reusable interactive components (like `ActionButton` subclassing `ctk.CTkButton`) to ensure users receive clear visual indication that the element is clickable.
+
+## 2026-07-07 - Add keyboard focus states to CustomTkinter Entries
+**Learning:** CustomTkinter `CTkEntry` widgets lack default visual focus states out of the box, making keyboard navigation difficult.
+**Action:** Manually bind `<FocusIn>` and `<FocusOut>` events to update visual properties like `border_color`, and bind `<Escape>` to clear text and yield focus using `focus_set()`.

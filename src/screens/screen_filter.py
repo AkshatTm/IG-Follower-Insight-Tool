@@ -121,6 +121,11 @@ class ScreenFilter(ctk.CTkFrame):
         self.search_entry.pack(fill="x")
         self.search_entry.bind("<KeyRelease>", self._on_search)
 
+        # [UX] Add visual focus states for keyboard accessibility
+        self.search_entry.bind("<FocusIn>", lambda e: self.search_entry.configure(border_color=Colors.ACCENT_PRIMARY))
+        self.search_entry.bind("<FocusOut>", lambda e: self.search_entry.configure(border_color=Colors.BORDER))
+        self.search_entry.bind("<Escape>", self._on_escape_search)
+
     def _build_user_list(self, parent):
         """Scrollable frame populated with username rows + VIP switches."""
         # Container card
@@ -313,6 +318,12 @@ class ScreenFilter(ctk.CTkFrame):
     # ─────────────────────────────────────
     #  EVENT HANDLERS
     # ─────────────────────────────────────
+
+    def _on_escape_search(self, event=None):
+        """Clear search and drop focus on Escape key."""
+        self.search_entry.delete(0, "end")
+        self._on_search()
+        self.focus_set()
 
     def _on_search(self, event=None):
         """Debounce the search input to avoid UI lag."""
